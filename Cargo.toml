@@ -1,5 +1,5 @@
 [package]
-name = "project-name"
+name = "rust-telemetry"
 version = "0.1.0"
 authors = []
 edition = "2021"
@@ -7,6 +7,37 @@ resolver = "2"
 publish = ["famedly"]
 
 [dependencies]
+async-trait = { version = "^0.1.51" }
+famedly_rust_utils = { git = "https://github.com/famedly/famedly-rust-utils.git", rev = "288ef077cbddd1114d15468551ce2d94349f7929" }
+http = { version = "1.2.0" }
+once_cell = { version = "1.20.2" }
+opentelemetry = { version = "0.27.1" }
+opentelemetry-appender-tracing = { version = "0.27.0" }
+opentelemetry-otlp = { version = "0.27.0" }
+opentelemetry-semantic-conventions = { version = "0.27.0" }
+opentelemetry_sdk = { version = "0.27.1", features = ["rt-tokio"] }
+thiserror = "1.0.64"
+tracing-opentelemetry = { version = "0.28.0" }
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing = "0.1.40"
+serde = { version = "1.0.210", features = ["derive"] }
+url = { version = "2.5.2", features = ["serde"] }
+
+
+# reqwest-middleware
+opentelemetry-http = { version = "0.27.0", optional = true }
+reqwest = { version = "0.12.12", optional = true }
+reqwest-middleware = { version = "0.4.0", optional = true }
+
+[dev-dependencies]
+tokio = { version = "1.43.0", features = ["full"] }
+
+[features]
+reqwest-middleware = [
+    "dep:reqwest",
+    "dep:reqwest-middleware",
+    "dep:opentelemetry-http",
+]
 
 [lints.rust]
 dead_code = "warn"
@@ -56,7 +87,7 @@ manual_ok_or = "warn"
 many_single_char_names = "warn"
 map_unwrap_or = "warn"
 mem_forget = "warn"
-#missing_const_for_fn = "warn"
+missing_const_for_fn = "warn"
 missing_docs_in_private_items = "warn"
 must_use_candidate = "warn"
 mut_mut = "warn"
