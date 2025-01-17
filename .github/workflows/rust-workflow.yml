@@ -3,10 +3,10 @@ name: Rust
 # Trigger the CI on any tags, pushes to any branch and PRs to any branch.
 on:
   push:
-    branches: [ "main" ]
-    tags: [ "*" ]
+    branches: ["main"]
+    tags: ["*"]
   pull_request:
-    branches: [ "*" ]
+    branches: ["*"]
 
 # Make sure there is no pipeline running uselessly.
 concurrency:
@@ -22,3 +22,7 @@ jobs:
   check:
     uses: famedly/backend-build-workflows/.github/workflows/rust-workflow.yml@v1
     secrets: inherit
+    with:
+      clippy_args: "--all-features"
+      test_args: "--all-features"
+      testcov_args: "--all-features"
