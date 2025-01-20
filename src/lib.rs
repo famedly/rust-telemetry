@@ -29,6 +29,8 @@ use tracing_subscriber::{
 };
 use url::Url;
 
+#[cfg(feature = "axum")]
+pub mod axum;
 pub mod config;
 #[cfg(feature = "reqwest-middleware")]
 pub mod reqwest_middleware;

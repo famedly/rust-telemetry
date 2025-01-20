@@ -74,7 +74,26 @@ Router::new().layer(OtelAxumLayer::default())
 
 For adding metrics all that is needed is to make a trace with specific prefix. The documentation on how it works is [here](https://docs.rs/tracing-opentelemetry/latest/tracing_opentelemetry/struct.MetricsLayer.html#usage)
 
-For adding metrics to axum servers see crates like [tower-otel-http-metrics](https://github.com/francoposa/tower-otel-http-metrics)
+Another option is to use directly the OpenTelemetry SDK for that. Examples to it can be found [here](https://github.com/open-telemetry/opentelemetry-rust/blob/main/examples/metrics-basic/src/main.rs)
+
+For convenience the function `add_metrics_layer` was added. This function adds an axum layer that makes metrics. To use this function the feature flag `axum` is needed. The layer is only added if the metrics exporting configuration is enabled.
+
+Here is an example of usage. Note that in this example the layer won't be added because the default `OtelConfig` is not set to export metrics.
+
+```rust
+#[tokio::main]
+async fn main() {
+  let config = Some(rust_telemetry::config::OtelConfig::default());
+  let app = Router::new().route("/", get("Test"));
+  let app = rust_telemetry::axum::add_metrics_layer(app, config);
+
+  let listener = tokio::net::TcpListener::bind("127.0.0.1:8000").await.unwrap();
+  let server = axum::serve(listener, app);
+  if let Err(err) = server.await {
+      eprintln!("server error: {}", err);
+  }
+}
+```
 
 ## Lints
 
