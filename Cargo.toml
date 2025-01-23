@@ -8,7 +8,7 @@ publish = ["famedly"]
 
 [dependencies]
 async-trait = { version = "^0.1.51" }
-famedly_rust_utils = { git = "https://github.com/famedly/famedly-rust-utils.git", rev = "288ef077cbddd1114d15468551ce2d94349f7929" }
+famedly_rust_utils = { version = "0.1.0", registry = "famedly" }
 http = { version = "1.2.0" }
 once_cell = { version = "1.20.2" }
 opentelemetry = { version = "0.27.1" }
