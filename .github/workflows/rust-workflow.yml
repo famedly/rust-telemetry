@@ -26,3 +26,10 @@ jobs:
       clippy_args: "--all-features"
       test_args: "--all-features"
       testcov_args: "--all-features"
+
+  publish:
+    needs: check
+    uses: famedly/backend-build-workflows/.github/workflows/publish-crate.yml@v1
+    secrets:
+      CI_SSH_PRIVATE_KEY: ${{ secrets.CI_SSH_PRIVATE_KEY }}
+      registry-auth-token: ${{ secrets.SHIPYARD_RS_TOKEN }}
