@@ -127,8 +127,14 @@ pub fn init_otel(
 		.and_then(|stdout| stdout.enabled.then_some(stdout))
 		.map(|logger_config| {
 			let filter_fmt = EnvFilter::from_str(&logger_config.get_filter(main_crate))?;
+			let stdout_layer = tracing_subscriber::fmt::layer().with_thread_names(true);
 			Ok::<_, OtelInitError>(
-				tracing_subscriber::fmt::layer().with_thread_names(true).with_filter(filter_fmt),
+				if logger_config.json_output {
+					Box::new(stdout_layer.json()) as Box<dyn Layer<_> + Send + Sync>
+				} else {
+					Box::new(stdout_layer)
+				}
+				.with_filter(filter_fmt),
 			)
 		})
 		.transpose()?;
@@ -146,8 +152,8 @@ pub fn init_otel(
 				)?;
 
 				// Create a new OpenTelemetryTracingBridge using the above LoggerProvider.
-				let logs_layer = OpenTelemetryTracingBridge::new(&logger_provider);
-				let logs_layer = logs_layer.with_filter(filter_otel);
+				let logs_layer =
+					OpenTelemetryTracingBridge::new(&logger_provider).with_filter(filter_otel);
 
 				Ok::<_, OtelInitError>((Some(logger_provider), Some(logs_layer)))
 			})

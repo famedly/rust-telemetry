@@ -48,6 +48,9 @@ pub struct StdoutLogsConfig {
 	/// Level for the dependencies
 	#[serde(default = "default_level_filter")]
 	pub general_level: LevelFilter,
+	/// Output structured JSON logs
+	#[serde(default)]
+	pub json_output: bool,
 }
 
 /// Provider configuration for OpenTelemetry export
@@ -79,7 +82,12 @@ impl StdoutLogsConfig {
 
 impl Default for StdoutLogsConfig {
 	fn default() -> Self {
-		Self { enabled: true, level: default_level_filter(), general_level: default_level_filter() }
+		Self {
+			enabled: true,
+			level: default_level_filter(),
+			general_level: default_level_filter(),
+			json_output: false,
+		}
 	}
 }
 
