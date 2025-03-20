@@ -1,7 +1,8 @@
 //! OpenTelemetry configuration
 //!
 //! Module containing the configuration struct for the OpenTelemetry
-use std::str::FromStr as _;
+
+use std::collections::BTreeMap as Map;
 
 use famedly_rust_utils::LevelFilter;
 use serde::Deserialize;
@@ -10,8 +11,32 @@ use url::Url;
 /// Default gRPC Otel endpoint
 const DEFAULT_ENDPOINT: &str = "http://localhost:4317";
 
+/// Wrapper over [`Url`] with [`Default`] implementation `http://localhost:4317`
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[derive(Debug, Clone, Deserialize)]
+#[repr(transparent)]
+#[serde(transparent)]
+#[allow(missing_docs)]
+pub struct OtelUrl {
+	pub url: Url,
+}
+
+impl From<Url> for OtelUrl {
+	fn from(url: Url) -> Self {
+		Self { url }
+	}
+}
+
+#[allow(clippy::expect_used)]
+impl Default for OtelUrl {
+	fn default() -> Self {
+		Self { url: Url::parse(DEFAULT_ENDPOINT).expect("Error parsing default endpoint") }
+	}
+}
+
 /// OpenTelemetry configuration
-#[derive(Debug, Deserialize, Clone, Default)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct OtelConfig {
 	/// Enables logs on stdout
 	pub stdout: Option<StdoutLogsConfig>,
@@ -36,15 +61,17 @@ impl OtelConfig {
 }
 
 /// Configuration for exporting OpenTelemetry data
-#[derive(Debug, Deserialize, Clone, Default)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[derive(Debug, Clone, Default, Deserialize)]
 pub struct ExporterConfig {
 	/// gRPC endpoint for exporting using OTELP
-	pub endpoint: Option<Url>,
-	/// Application service name
-	pub service_name: String,
-	/// Application version
-	pub version: String,
-
+	#[serde(default)]
+	pub endpoint: OtelUrl,
+	/// Key value mapping of the OTEL resource. See [Resource semantic conventions](https://opentelemetry.io/docs/specs/semconv/resource/) for what can be set here.
+	/// Only string values are supported now.
+	/// This crate sets `service.name` and `service.version` by default.
+	#[serde(default)]
+	pub resource_metadata: Map<String, String>,
 	/// Logs exporting config
 	pub logs: Option<ProviderConfig>,
 	/// Traces exporting config
@@ -54,9 +81,11 @@ pub struct ExporterConfig {
 }
 
 /// Stdout logs configuration
-#[derive(Debug, Deserialize, Clone)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[derive(Debug, Clone, Deserialize)]
 pub struct StdoutLogsConfig {
 	/// Enables the stdout logs
+	#[serde(default = "true_")]
 	pub enabled: bool,
 	/// Level for the crate
 	#[serde(default = "default_level_filter")]
@@ -70,9 +99,11 @@ pub struct StdoutLogsConfig {
 }
 
 /// Provider configuration for OpenTelemetry export
-#[derive(Debug, Deserialize, Clone)]
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ProviderConfig {
 	/// Enables provider
+	#[serde(default)]
 	pub enabled: bool,
 	/// Level for the crate
 	#[serde(default = "default_level_filter")]
@@ -117,17 +148,12 @@ impl Default for ProviderConfig {
 	}
 }
 
-impl ExporterConfig {
-	#[allow(clippy::expect_used)]
-	/// Gets the configured exporting endpoint or uses the default one
-	pub(crate) fn get_endpoint(&self) -> Url {
-		self.endpoint
-			.clone()
-			.unwrap_or(Url::from_str(DEFAULT_ENDPOINT).expect("Error parsing default endpoint"))
-	}
-}
-
 /// Sets the default LevelFilter
 const fn default_level_filter() -> LevelFilter {
 	LevelFilter(tracing::level_filters::LevelFilter::INFO)
+}
+
+/// Workaround for [serde-rs/serde#368](https://github.com/serde-rs/serde/issues/368)
+const fn true_() -> bool {
+	true
 }

@@ -1,0 +1,94 @@
+$schema: http://json-schema.org/draft-07/schema#
+title: OtelConfig
+description: OpenTelemetry configuration
+type: object
+properties:
+  exporter:
+    description: Configurations for exporting traces, metrics and logs
+    anyOf:
+    - $ref: '#/definitions/ExporterConfig'
+    - type: 'null'
+  stdout:
+    description: Enables logs on stdout
+    anyOf:
+    - $ref: '#/definitions/StdoutLogsConfig'
+    - type: 'null'
+definitions:
+  ExporterConfig:
+    description: Configuration for exporting OpenTelemetry data
+    type: object
+    properties:
+      endpoint:
+        description: gRPC endpoint for exporting using OTELP
+        type: string
+        format: uri
+      logs:
+        description: Logs exporting config
+        anyOf:
+        - $ref: '#/definitions/ProviderConfig'
+        - type: 'null'
+      metrics:
+        description: Metrics exporting config
+        anyOf:
+        - $ref: '#/definitions/ProviderConfig'
+        - type: 'null'
+      resource_metadata:
+        description: Key value mapping of the OTEL resource. See [Resource semantic conventions](https://opentelemetry.io/docs/specs/semconv/resource/) for what can be set here. Only string values are supported now. This crate sets `service.name` and `service.version` by default.
+        default: {}
+        type: object
+        additionalProperties:
+          type: string
+      traces:
+        description: Traces exporting config
+        anyOf:
+        - $ref: '#/definitions/ProviderConfig'
+        - type: 'null'
+  LevelFilter:
+    type: string
+    enum:
+    - off
+    - error
+    - warn
+    - info
+    - debug
+    - trace
+  ProviderConfig:
+    description: Provider configuration for OpenTelemetry export
+    type: object
+    properties:
+      enabled:
+        description: Enables provider
+        default: false
+        type: boolean
+      general_level:
+        description: Level for the dependencies
+        default: info
+        allOf:
+        - $ref: '#/definitions/LevelFilter'
+      level:
+        description: Level for the crate
+        default: info
+        allOf:
+        - $ref: '#/definitions/LevelFilter'
+  StdoutLogsConfig:
+    description: Stdout logs configuration
+    type: object
+    properties:
+      enabled:
+        description: Enables the stdout logs
+        default: true
+        type: boolean
+      general_level:
+        description: Level for the dependencies
+        default: info
+        allOf:
+        - $ref: '#/definitions/LevelFilter'
+      json_output:
+        description: Output structured JSON logs
+        default: false
+        type: boolean
+      level:
+        description: Level for the crate
+        default: info
+        allOf:
+        - $ref: '#/definitions/LevelFilter'

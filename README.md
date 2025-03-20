@@ -29,11 +29,13 @@ The default level of logging and traces is `info` for the crate and all it's dep
 ```rust
 #[tokio::main]
 async fn main() {
-  let _guard = init_otel(&config, env!("CARGO_CRATE_NAME")).unwrap();
+  let _guard = init_otel!(&config).unwrap();
 
 }
 ```
 
+## Configuration
+An example config for `OtelConfig` can be found in [config.sample.yaml](./config.sample.yaml). For the exact schema, see [./config-schema.yaml](./config-schema.yaml). Use `schemars` feature of this crate to be able to generate schemas for your service configs.
 
 ### Propagate the context
 
@@ -56,7 +58,7 @@ client.get("http://localhost").send().await;
 
 ### axum
 
-For retrieving a context using axum we can use the `OtelAxumLayer` from [axum_tracing_opentelemetry](https://crates.io/crates/axum-tracing-opentelemetry)
+For retrieving a context using axum we can use the `OtelAxumLayer` from [`axum_tracing_opentelemetry`](https://crates.io/crates/axum-tracing-opentelemetry)
 
 > [!WARNING]
 > This only seems to be working using the feature flag `tracing_level_info`. See the [issue](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/issues/148)

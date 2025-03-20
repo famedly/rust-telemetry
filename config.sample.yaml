@@ -1,0 +1,72 @@
+# optional
+stdout:
+  # optional, default: true
+  enabled: true
+
+  # Level for the crate
+  # <off|error|warn|info|debug|trace> optional, default: info
+  level: info
+
+  # Level for the dependencies
+  # <off|error|warn|info|debug|trace> optional, default: info
+  general_level: info
+
+  # Output structured JSON logs
+  # optional, default: false
+  json_output: false
+
+# optional
+exporter:
+  # gRPC endpoint for exporting using OTELP
+  # optional, default: "http://localhost:4317"
+  endpoint: http://localhost:4317
+
+  # Key value mapping of the OTEL resource.
+  # See https://opentelemetry.io/docs/specs/semconv/resource/
+  # for what can be set here. Only string values are supported now.
+  # This crate sets `service.name` and `service.version` using this config option.
+  # optional
+  resource_metadata:
+    service.instance.id: test-instance
+
+  # Logs exporting config
+  # optional
+  logs:
+    # optional, default: false
+    enabled: false
+
+    # Level for the crate
+    # <off|error|warn|info|debug|trace> optional, default: info
+    level: LevelFilter,
+
+    # Level for the dependencies
+    # <off|error|warn|info|debug|trace> optional, default: info
+    general_level: LevelFilter,
+
+  # Traces exporting config
+  # optional
+  traces:
+    # optional, default: false
+    enabled: false
+
+    # Level for the crate
+    # <off|error|warn|info|debug|trace> optional, default: info
+    level: LevelFilter,
+
+    # Level for the dependencies
+    # <off|error|warn|info|debug|trace> optional, default: info
+    general_level: LevelFilter,
+
+  # Metrics exporting config
+  # optional
+  metrics:
+    # optional, default: false
+    enabled: false
+
+    # Level for the crate
+    # <off|error|warn|info|debug|trace> optional, default: info
+    level: LevelFilter,
+
+    # Level for the dependencies
+    # <off|error|warn|info|debug|trace> optional, default: info
+    general_level: LevelFilter,
