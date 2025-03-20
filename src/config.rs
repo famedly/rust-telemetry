@@ -19,6 +19,22 @@ pub struct OtelConfig {
 	pub exporter: Option<ExporterConfig>,
 }
 
+impl OtelConfig {
+	/// Helper constructor to get stdout-only config for use in tests.
+	#[must_use]
+	pub fn for_tests() -> Self {
+		OtelConfig {
+			stdout: Some(StdoutLogsConfig {
+				enabled: true,
+				level: tracing_subscriber::filter::LevelFilter::TRACE.into(),
+				general_level: tracing_subscriber::filter::LevelFilter::INFO.into(),
+				json_output: false,
+			}),
+			exporter: None,
+		}
+	}
+}
+
 /// Configuration for exporting OpenTelemetry data
 #[derive(Debug, Deserialize, Clone, Default)]
 pub struct ExporterConfig {
