@@ -2,9 +2,9 @@
 //!
 //! Lib containing the definitions and initializations of the OpenTelemetry
 //! tools
-use std::str::FromStr as _;
+use std::{collections::BTreeMap as Map, str::FromStr as _};
 
-use config::{OtelConfig, StdoutLogsConfig};
+use config::{OtelConfig, OtelUrl, StdoutLogsConfig};
 use opentelemetry::{
 	trace::{TraceError, TracerProvider as _},
 	KeyValue,
@@ -27,7 +27,6 @@ use tracing_opentelemetry::{MetricsLayer, OpenTelemetryLayer};
 use tracing_subscriber::{
 	layer::SubscriberExt as _, util::SubscriberInitExt as _, EnvFilter, Layer,
 };
-use url::Url;
 
 #[cfg(feature = "axum")]
 pub mod axum;
@@ -36,23 +35,25 @@ pub mod config;
 pub mod reqwest_middleware;
 
 /// Crates a resource for the Otel providers
-fn resource(service_name: String, version: String) -> Resource {
+fn mk_resource(
+	service_name: &'static str,
+	version: &'static str,
+	resource_metadata: Map<String, String>,
+) -> Resource {
 	Resource::from_schema_url(
-		[KeyValue::new(SERVICE_NAME, service_name), KeyValue::new(SERVICE_VERSION, version)],
+		[KeyValue::new(SERVICE_NAME, service_name), KeyValue::new(SERVICE_VERSION, version)]
+			.into_iter()
+			.chain(resource_metadata.into_iter().map(|(k, v)| KeyValue::new(k, v))),
 		SCHEMA_URL,
 	)
 }
 
 /// Setup a Otel exporter and a provider for traces
-fn init_traces(
-	endpoint: Url,
-	service_name: String,
-	version: String,
-) -> Result<TracerProvider, TraceError> {
-	let exporter = SpanExporter::builder().with_tonic().with_endpoint(endpoint).build()?;
+fn init_traces(endpoint: OtelUrl, resource: Resource) -> Result<TracerProvider, TraceError> {
+	let exporter = SpanExporter::builder().with_tonic().with_endpoint(endpoint.url).build()?;
 	let tracer_provider = TracerProvider::builder()
 		.with_id_generator(RandomIdGenerator::default())
-		.with_resource(resource(service_name, version))
+		.with_resource(resource)
 		.with_batch_exporter(exporter, runtime::Tokio)
 		.build();
 
@@ -61,40 +62,55 @@ fn init_traces(
 }
 
 /// Setup a Otel exporter and a provider for metrics
-fn init_metrics(
-	endpoint: Url,
-	service_name: String,
-	version: String,
-) -> Result<SdkMeterProvider, MetricError> {
+fn init_metrics(endpoint: OtelUrl, resource: Resource) -> Result<SdkMeterProvider, MetricError> {
 	let exporter = opentelemetry_otlp::MetricExporter::builder()
 		.with_tonic()
-		.with_endpoint(endpoint)
+		.with_endpoint(endpoint.url)
 		.with_temporality(opentelemetry_sdk::metrics::Temporality::default())
 		.build()?;
 
 	let reader = PeriodicReader::builder(exporter, runtime::Tokio).build();
 
-	let meter_provider = MeterProviderBuilder::default()
-		.with_resource(resource(service_name, version))
-		.with_reader(reader)
-		.build();
+	let meter_provider =
+		MeterProviderBuilder::default().with_resource(resource).with_reader(reader).build();
 
 	opentelemetry::global::set_meter_provider(meter_provider.clone());
 	Ok(meter_provider)
 }
 
 /// Setup a Otel exporter and a provider for logs
-fn init_logs(
-	endpoint: Url,
-	service_name: String,
-	version: String,
-) -> Result<LoggerProvider, LogError> {
-	let exporter = LogExporter::builder().with_tonic().with_endpoint(endpoint).build()?;
+fn init_logs(endpoint: OtelUrl, resource: Resource) -> Result<LoggerProvider, LogError> {
+	let exporter = LogExporter::builder().with_tonic().with_endpoint(endpoint.url).build()?;
 
 	Ok(LoggerProvider::builder()
-		.with_resource(resource(service_name, version))
+		.with_resource(resource)
 		.with_batch_exporter(exporter, runtime::Tokio)
 		.build())
+}
+
+/// Initializes the OpenTelemetry
+///
+/// example
+/// ```rust
+/// use rust_telemetry::{config::OtelConfig, init_otel};
+///
+/// #[tokio::main]
+/// async fn main() {
+/// 	let _guard = init_otel!(&OtelConfig::default());
+///
+/// 	// ...
+/// }
+/// ```
+#[macro_export]
+macro_rules! init_otel {
+	($config:expr) => {
+		$crate::init_otel(
+			$config,
+			env!("CARGO_CRATE_NAME"),
+			env!("CARGO_PKG_NAME"),
+			env!("CARGO_PKG_VERSION"),
+		)
+	};
 }
 
 /// Initializes the OpenTelemetry
@@ -108,6 +124,8 @@ fn init_logs(
 /// 	let _guard = rust_telemetry::init_otel(
 /// 		&config::OtelConfig::default(),
 /// 		env!("CARGO_CRATE_NAME"),
+/// 		env!("CARGO_PKG_NAME"),
+/// 		env!("CARGO_PKG_VERSION"),
 /// 	);
 ///
 /// 	// ...
@@ -117,6 +135,8 @@ fn init_logs(
 pub fn init_otel(
 	config: &OtelConfig,
 	main_crate: &'static str,
+	service_name: &'static str,
+	pkg_version: &'static str,
 ) -> Result<ProvidersGuard, OtelInitError> {
 	opentelemetry::global::set_text_map_propagator(TraceContextPropagator::default());
 
@@ -139,17 +159,16 @@ pub fn init_otel(
 		})
 		.transpose()?;
 
-	let (logger_provider, logs_layer) = config
-		.exporter
+	let exporter_with_resource = config.exporter.as_ref().map(|exporter| {
+		(exporter, mk_resource(service_name, pkg_version, exporter.resource_metadata.clone()))
+	});
+
+	let (logger_provider, logs_layer) = exporter_with_resource
 		.as_ref()
-		.and_then(|exporter| {
+		.and_then(|(exporter, resource)| {
 			exporter.logs.as_ref().and_then(|c| c.enabled.then_some(c)).map(|logger_config| {
 				let filter_otel = EnvFilter::from_str(&logger_config.get_filter(main_crate))?;
-				let logger_provider = init_logs(
-					exporter.get_endpoint(),
-					exporter.service_name.clone(),
-					exporter.version.clone(),
-				)?;
+				let logger_provider = init_logs(exporter.endpoint.clone(), resource.clone())?;
 
 				// Create a new OpenTelemetryTracingBridge using the above LoggerProvider.
 				let logs_layer =
@@ -161,18 +180,13 @@ pub fn init_otel(
 		.transpose()?
 		.unwrap_or((None, None));
 
-	let (tracer_provider, tracer_layer) = config
-		.exporter
+	let (tracer_provider, tracer_layer) = exporter_with_resource
 		.as_ref()
-		.and_then(|exporter| {
+		.and_then(|(exporter, resource)| {
 			exporter.traces.as_ref().and_then(|c| c.enabled.then_some(c)).map(|tracer_config| {
 				let trace_filter = EnvFilter::from_str(&tracer_config.get_filter(main_crate))?;
-				let tracer_provider = init_traces(
-					exporter.get_endpoint(),
-					exporter.service_name.clone(),
-					exporter.version.clone(),
-				)?;
-				let tracer = tracer_provider.tracer(exporter.service_name.clone());
+				let tracer_provider = init_traces(exporter.endpoint.clone(), resource.clone())?;
+				let tracer = tracer_provider.tracer(service_name);
 				let tracer_layer = OpenTelemetryLayer::new(tracer).with_filter(trace_filter);
 				Ok::<_, OtelInitError>((Some(tracer_provider), Some(tracer_layer)))
 			})
@@ -180,17 +194,12 @@ pub fn init_otel(
 		.transpose()?
 		.unwrap_or((None, None));
 
-	let (meter_provider, meter_layer) = config
-		.exporter
+	let (meter_provider, meter_layer) = exporter_with_resource
 		.as_ref()
-		.and_then(|exporter| {
+		.and_then(|(exporter, resource)| {
 			exporter.metrics.as_ref().and_then(|c| c.enabled.then_some(c)).map(|meter_config| {
 				let metrics_filter = EnvFilter::from_str(&meter_config.get_filter(main_crate))?;
-				let meter_provider = init_metrics(
-					exporter.get_endpoint(),
-					exporter.service_name.clone(),
-					exporter.version.clone(),
-				)?;
+				let meter_provider = init_metrics(exporter.endpoint.clone(), resource.clone())?;
 				let meter_layer =
 					MetricsLayer::new(meter_provider.clone()).with_filter(metrics_filter);
 
@@ -284,7 +293,7 @@ mod tests {
 				..Default::default()
 			}),
 		};
-		let guard = init_otel(&config, env!("CARGO_PKG_NAME")).expect("Error initializing Otel");
+		let guard = init_otel!(&config).expect("Error initializing Otel");
 		assert!(guard.tracer_provider.is_some());
 	}
 	#[tokio::test]
@@ -296,8 +305,7 @@ mod tests {
 				..Default::default()
 			}),
 		};
-		let guard = init_otel(&config_enabled_false, env!("CARGO_PKG_NAME"))
-			.expect("Error initializing Otel");
+		let guard = init_otel!(&config_enabled_false).expect("Error initializing Otel");
 		assert!(guard.tracer_provider.is_none());
 	}
 
@@ -315,8 +323,7 @@ mod tests {
 				..Default::default()
 			}),
 		};
-		let guard = init_otel(&config_enabled_false, env!("CARGO_PKG_NAME"))
-			.expect("Error initializing Otel");
+		let guard = init_otel!(&config_enabled_false).expect("Error initializing Otel");
 		assert!(guard.meter_provider.is_none());
 	}
 	#[tokio::test]
@@ -328,7 +335,7 @@ mod tests {
 				..Default::default()
 			}),
 		};
-		let guard = init_otel(&config, env!("CARGO_PKG_NAME")).expect("Error initializing Otel");
+		let guard = init_otel!(&config).expect("Error initializing Otel");
 		assert!(guard.logger_provider.is_some());
 	}
 	#[tokio::test]
@@ -340,8 +347,7 @@ mod tests {
 				..Default::default()
 			}),
 		};
-		let guard = init_otel(&config_enabled_false, env!("CARGO_PKG_NAME"))
-			.expect("Error initializing Otel");
+		let guard = init_otel!(&config_enabled_false).expect("Error initializing Otel");
 		assert!(guard.logger_provider.is_none());
 	}
 
@@ -351,8 +357,7 @@ mod tests {
 			stdout: Some(StdoutLogsConfig { enabled: true, ..Default::default() }),
 			exporter: Some(ExporterConfig::default()),
 		};
-		let guard =
-			init_otel(&config_none, env!("CARGO_PKG_NAME")).expect("Error initializing Otel");
+		let guard = init_otel!(&config_none).expect("Error initializing Otel");
 		assert!(guard.meter_provider.is_none());
 		assert!(guard.tracer_provider.is_none());
 		assert!(guard.logger_provider.is_none());
