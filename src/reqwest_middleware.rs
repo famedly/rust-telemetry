@@ -2,7 +2,7 @@
 //!
 //! This module provides a reqwest middleware that will propagate the
 //! OpenTelemetry current context by setting the appropriated headers on the
-//! request. This layer should be used with the crate [reqwest-middleware]
+//! request. This layer should be used with the crate [`reqwest_middleware`]
 
 use http::Extensions;
 use opentelemetry_http::HeaderInjector;
@@ -11,7 +11,7 @@ use reqwest_middleware::{Middleware, Next, Result};
 use tracing::Span;
 use tracing_opentelemetry::OpenTelemetrySpanExt as _;
 
-/// Middleware for [reqwest-middleware] to propagate the Otel context
+/// Middleware for [`reqwest_middleware`] to propagate the Otel context
 ///
 /// Example
 ///

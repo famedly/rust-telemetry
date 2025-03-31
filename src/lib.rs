@@ -2,6 +2,7 @@
 //!
 //! Lib containing the definitions and initializations of the OpenTelemetry
 //! tools
+#![cfg_attr(all(doc, not(doctest)), feature(doc_auto_cfg))]
 use std::{collections::BTreeMap as Map, str::FromStr as _};
 
 use config::{OtelConfig, OtelUrl, StdoutLogsConfig};
