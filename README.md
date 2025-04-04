@@ -11,20 +11,19 @@
 [badge-docs-main-img]: https://img.shields.io/badge/docs-main-blue
 [badge-docs-main-url]: https://famedly.github.io/rust-library-template/project_name/index.html
 
+This library contains a set of helpers to work with OpenTelemetry logs, traces and metrics.
 
-This lib contains a set of helpers to work with OpenTelemetry logs, traces and metrics.
+## Setup
 
-### Setup
+For setup, all that's needed is to run the function `rust_telemetry::init_otel`. The function returns a guard that takes care of properly shutting down the providers.
 
-For setup all that's needed it to run the function `rust_telemetry::init_otel`. The function returns a guard that takes care of properly shutting down the providers.
+If no configuration is present, the exporting of logs, traces and metrics is disabled and the stdout logging is enabled.
 
-If no configuration is present the exporting of logs traces and metrics is disabled and the stdout logging is enabled.
+The functions on the crate exporting OpenTelemetry traces should be annotated with `tracing::instrument` to generate a new span for that function. Documentation on this macro can be found [here](https://docs.rs/tracing/latest/tracing/attr.instrument.html).
 
-The functions on the crate exporting opentelemetry traces should be annotated with `tracing::instrument` to generate a new span for that function. Documentation on this macro can be found on the [here](https://docs.rs/tracing/latest/tracing/attr.instrument.html)
+The OpenTelemetry information is exported using gRPC to an OpenTelemetry collector. By default, the expected endpoint is `http://localhots:4317`
 
-The opentelemetry information is exported using gRPC to and opentelemetry collector. By default the expected endpoint is `http://localhots:4317`
-
-The default level of logging and traces is `info` for the crate and all it's dependencies. This level can be changed through the configuration and, the result filter expression is `general_level,main_crate=level` where `general_level` and `level` come from the configuration and `main_crate` is an argument for the `init_otel` function
+The default level of logging and traces is `info` for the crate and all its dependencies. This level can be changed through the configuration, and the resulting filter expression is `general_level,main_crate=level` where `general_level` and `level` come from the configuration and `main_crate` is an argument for the `init_otel` function
 
 ```rust
 #[tokio::main]
@@ -35,15 +34,16 @@ async fn main() {
 ```
 
 ## Configuration
-An example config for `OtelConfig` can be found in [config.sample.yaml](./config.sample.yaml). For the exact schema, see [./config-schema.yaml](./config-schema.yaml). Use `schemars` feature of this crate to be able to generate schemas for your service configs.
+
+An example config for `OtelConfig` can be found in [config.sample.yaml](./config.sample.yaml). For the exact schema, see [./config-schema.yaml](./config-schema.yaml). Use the `schemars` feature of this crate to be able to generate schemas for your service configs.
 
 ### Propagate the context
 
 A context can be propagated to allow linking the traces from two different services. This is done by injecting the context information into the request and retrieving it in another service.
 
-#### reqwest
+#### `reqwest`
 
-For injecting the current context using the reqwest client we can wrap a client in a [reqwest-middleware](https://crates.io/crates/reqwest-middleware) and use the `OtelMiddleware` middleware present in this crate. This feature requires the feature flag `reqwest-middleware`
+For injecting the current context using the reqwest client, we can wrap a client in a [reqwest-middleware](https://crates.io/crates/reqwest-middleware) and use the `OtelMiddleware` middleware present in this crate. This feature requires the feature flag `reqwest-middleware`
 
 ```rust
 use rust_telemetry::reqwest_middleware::OtelMiddleware;
@@ -56,9 +56,9 @@ let client = reqwest_middleware::ClientBuilder::new(reqwest_client)
 client.get("http://localhost").send().await;
 ```
 
-### axum
+### `axum`
 
-For retrieving a context using axum we can use the `OtelAxumLayer` from [`axum_tracing_opentelemetry`](https://crates.io/crates/axum-tracing-opentelemetry)
+For retrieving a context using axum, we can use the `OtelAxumLayer` from [`axum_tracing_opentelemetry`](https://crates.io/crates/axum-tracing-opentelemetry)
 
 > [!WARNING]
 > This only seems to be working using the feature flag `tracing_level_info`. See the [issue](https://github.com/davidB/tracing-opentelemetry-instrumentation-sdk/issues/148)
@@ -74,13 +74,13 @@ Router::new().layer(OtelAxumLayer::default())
 
 ### Metrics
 
-For adding metrics all that is needed is to make a trace with specific prefix. The documentation on how it works is [here](https://docs.rs/tracing-opentelemetry/latest/tracing_opentelemetry/struct.MetricsLayer.html#usage)
+For adding metrics, all that is needed is to make a trace with a specific prefix. The documentation on how it works is [here](https://docs.rs/tracing-opentelemetry/latest/tracing_opentelemetry/struct.MetricsLayer.html#usage)
 
-Another option is to use directly the OpenTelemetry SDK for that. Examples to it can be found [here](https://github.com/open-telemetry/opentelemetry-rust/blob/main/examples/metrics-basic/src/main.rs)
+Another option is to use directly the OpenTelemetry SDK for that. Examples can be found [here](https://github.com/open-telemetry/opentelemetry-rust/blob/main/examples/metrics-basic/src/main.rs)
 
-For convenience the function `add_metrics_layer` was added. This function adds an axum layer that makes metrics. To use this function the feature flag `axum` is needed. The layer is only added if the metrics exporting configuration is enabled.
+For convenience, the function `add_metrics_layer` was added. This function adds an axum layer that makes metrics. To use this function, the feature flag `axum` is needed. The layer is only added if the metrics exporting configuration is enabled.
 
-Here is an example of usage. Note that in this example the layer won't be added because the default `OtelConfig` is not set to export metrics.
+Here is an example of usage. Note that in this example, the layer won't be added because the default `OtelConfig` is not set to export metrics.
 
 ```rust
 #[tokio::main]
@@ -104,6 +104,7 @@ cargo clippy --workspace --all-targets
 ```
 
 and this in your IDE:
+
 ```sh
 cargo clippy --workspace --all-targets --message-format=json
 ```
