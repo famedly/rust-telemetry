@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = []
 edition = "2021"
 resolver = "2"
+license = "AGPL-3.0-or-later"
+description = "Observability helpers originally developed for internal use at Famedly"
 # publish = ["famedly"]
 
 [[bin]]
