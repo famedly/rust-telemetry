@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = []
 edition = "2021"
 resolver = "2"
-publish = ["famedly"]
+# publish = ["famedly"]
 
 [[bin]]
 name = "gen-config-schema"
