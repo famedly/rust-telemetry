@@ -4,31 +4,35 @@
 # SPDX-License-Identifier: CC0-1.0
 
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
-    hooks:
-    -   id: check-byte-order-marker
-    -   id: check-case-conflict
-    -   id: check-merge-conflict
-    -   id: check-symlinks
-    -   id: check-yaml
-    -   id: check-toml
-    -   id: check-json
-    -   id: end-of-file-fixer
-    -   id: mixed-line-ending
-    -   id: trailing-whitespace
--   repo: git@github.com:famedly/backend-pre-commit-templates.git
-    rev: 5414ae52c3eff663ee2e79b4abae1761172bdbc4
-    hooks:
-    -   id: fmt
-    -   id: clippy
--   repo: https://github.com/crate-ci/typos
-    rev: dictgen-v0.3.1
-    hooks:
-    -   id: typos
--   repo: local
-    hooks:
-    -   id: config-schema-gen
-        name: JSON schema for config
-        language: script
-        entry: ./gen-config-schema.sh
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v5.0.0
+      hooks:
+          - id: check-byte-order-marker
+          - id: check-case-conflict
+          - id: check-merge-conflict
+          - id: check-symlinks
+          - id: check-yaml
+          - id: check-toml
+          - id: check-json
+          - id: end-of-file-fixer
+          - id: mixed-line-ending
+          - id: trailing-whitespace
+    - repo: git@github.com:famedly/backend-pre-commit-templates.git
+      rev: 123eb7487cf81a3d2ac036f73a084a41b3df54d9
+      hooks:
+          - id: fmt
+          - id: clippy
+    - repo: https://github.com/crate-ci/typos
+      rev: v1
+      hooks:
+          - id: typos
+    - repo: local
+      hooks:
+          - id: config-schema-gen
+            name: JSON schema for config
+            language: script
+            entry: ./gen-config-schema.sh
+    - repo: https://github.com/fsfe/reuse-tool
+      rev: v5.0.2
+      hooks:
+          - id: reuse

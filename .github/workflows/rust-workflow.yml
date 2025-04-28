@@ -23,6 +23,14 @@ env:
 
 # Defined CI jobs.
 jobs:
+  reuse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: REUSE Compliance check
+        uses: fsfe/reuse-action@v5
+
   check:
     uses: famedly/backend-build-workflows/.github/workflows/rust-workflow.yml@v1
     secrets: inherit
