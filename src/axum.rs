@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Famedly GmbH (info@famedly.com)
+//
+// SPDX-License-Identifier: Apache-2.0
+
 //! Module containing the function to add a metrics layer to axum
 use axum::routing::Router;
 use famedly_rust_utils::GenericCombinators;

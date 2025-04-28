@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Famedly GmbH (info@famedly.com)
+//
+// SPDX-License-Identifier: Apache-2.0
+
 //! OpenTelemetry configuration
 //!
 //! Module containing the configuration struct for the OpenTelemetry

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2025 Famedly GmbH (info@famedly.com)
+#
+# SPDX-License-Identifier: Apache-2.0
+
 name: Rust
 
 # Trigger the CI on any tags, pushes to any branch and PRs to any branch.

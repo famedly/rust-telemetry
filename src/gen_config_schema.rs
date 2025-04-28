@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2025 Famedly GmbH (info@famedly.com)
+//
+// SPDX-License-Identifier: Apache-2.0
+
 //! Generates config schema for this crate:
 //! ```sh
 //! cargo run --features serde_yaml,schemars --bin gen-config-schema > config-schema.yaml
