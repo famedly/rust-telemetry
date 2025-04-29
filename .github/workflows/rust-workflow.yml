@@ -23,18 +23,32 @@ env:
 
 # Defined CI jobs.
 jobs:
-  reuse:
+  compliance:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: REUSE Compliance check
+      - uses: actions/checkout@v4
+      - name: REUSE Compliance Check
         uses: fsfe/reuse-action@v5
-
-  check:
-    uses: famedly/backend-build-workflows/.github/workflows/rust-workflow.yml@v1
+      - name: Dependency license check
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check bans licenses sources
+  rust:
+    needs: compliance
+    uses: famedly/backend-build-workflows/.github/workflows/rust-workflow.yml@v2
     secrets: inherit
     with:
-      clippy_args: "--all-features"
-      test_args: "--all-features"
-      testcov_args: "--all-features"
+      clippy_args: '--all-features'
+      test_args: '--all-features'
+      testcov_args: '--all-features'
+      ref: v2
+
+  publish:
+    needs: rust
+    uses: famedly/backend-build-workflows/.github/workflows/publish-crate.yml@v2
+    with:
+      registry-name: "crates-io"
+      registry-index: "https://github.com/rust-lang/crates.io-index"
+    secrets:
+      CI_SSH_PRIVATE_KEY: ${{ secrets.CI_SSH_PRIVATE_KEY }}
+      registry-auth-token: ${{ secrets.CRATES_IO_TOKEN }}

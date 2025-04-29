@@ -48,5 +48,6 @@ exceptions = [
     { crate = "zerofrom", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
     { crate = "zerofrom-derive", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
     { crate = "zerovec", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "zerovec-derive", allow = ["Unicode-DFS-2016", "Unicode-3.0"] }
+    { crate = "zerovec-derive", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
+    { crate = "famedly_rust_utils", allow = ["AGPL-3.0"] }
 ]
