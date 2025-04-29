@@ -4,9 +4,9 @@
 
 [package]
 name = "rust-telemetry"
-version = "0.1.0"
+version = "1.0.0"
 authors = []
-edition = "2021"
+edition = "2024"
 resolver = "2"
 license = "Apache-2.0"
 description = "Observability helpers originally developed for internal use at Famedly"
@@ -19,7 +19,7 @@ required-features = ["schemars", "serde_yaml"]
 
 [dependencies]
 async-trait = { version = "^0.1.51" }
-famedly_rust_utils = "0.2.2"
+famedly_rust_utils = { version = "1.0.0", features = ["level_filter"] }
 http = { version = "1.2.0" }
 once_cell = { version = "1.20.2" }
 opentelemetry = { version = "0.27.1" }
