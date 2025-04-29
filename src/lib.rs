@@ -11,26 +11,26 @@ use std::{collections::BTreeMap as Map, str::FromStr as _};
 
 use config::{OtelConfig, OtelUrl, StdoutLogsConfig};
 use opentelemetry::{
-	trace::{TraceError, TracerProvider as _},
 	KeyValue,
+	trace::{TraceError, TracerProvider as _},
 };
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
 use opentelemetry_otlp::{LogExporter, SpanExporter, WithExportConfig as _};
 use opentelemetry_sdk::{
+	Resource,
 	logs::{LogError, LoggerProvider},
 	metrics::{MeterProviderBuilder, MetricError, PeriodicReader, SdkMeterProvider},
 	propagation::TraceContextPropagator,
 	runtime,
 	trace::{RandomIdGenerator, TracerProvider},
-	Resource,
 };
 use opentelemetry_semantic_conventions::{
-	resource::{SERVICE_NAME, SERVICE_VERSION},
 	SCHEMA_URL,
+	resource::{SERVICE_NAME, SERVICE_VERSION},
 };
 use tracing_opentelemetry::{MetricsLayer, OpenTelemetryLayer};
 use tracing_subscriber::{
-	layer::SubscriberExt as _, util::SubscriberInitExt as _, EnvFilter, Layer,
+	EnvFilter, Layer, layer::SubscriberExt as _, util::SubscriberInitExt as _,
 };
 
 #[cfg(feature = "axum")]

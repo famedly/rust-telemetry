@@ -17,7 +17,7 @@ use super::config::OtelConfig;
 /// metrics exporting disabled
 ///
 /// ```rust
-/// use axum::routing::{get, Router};
+/// use axum::routing::{Router, get};
 ///
 /// #[tokio::main]
 /// async fn main() {
