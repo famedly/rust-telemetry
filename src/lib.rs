@@ -10,24 +10,18 @@
 use std::{collections::BTreeMap as Map, str::FromStr as _};
 
 use config::{OtelConfig, OtelUrl, StdoutLogsConfig};
-use opentelemetry::{
-	KeyValue,
-	trace::{TraceError, TracerProvider as _},
-};
+use opentelemetry::{KeyValue, trace::TracerProvider as _};
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_otlp::{LogExporter, SpanExporter, WithExportConfig as _};
+use opentelemetry_otlp::{ExporterBuildError, LogExporter, SpanExporter, WithExportConfig as _};
+use opentelemetry_resource_detectors::{K8sResourceDetector, ProcessResourceDetector};
 use opentelemetry_sdk::{
 	Resource,
-	logs::{LogError, LoggerProvider},
-	metrics::{MeterProviderBuilder, MetricError, PeriodicReader, SdkMeterProvider},
+	logs::SdkLoggerProvider,
+	metrics::{MeterProviderBuilder, PeriodicReader, SdkMeterProvider},
 	propagation::TraceContextPropagator,
-	runtime,
-	trace::{RandomIdGenerator, TracerProvider},
+	trace::{RandomIdGenerator, SdkTracerProvider},
 };
-use opentelemetry_semantic_conventions::{
-	SCHEMA_URL,
-	resource::{SERVICE_NAME, SERVICE_VERSION},
-};
+use opentelemetry_semantic_conventions::resource::SERVICE_VERSION;
 use tracing_opentelemetry::{MetricsLayer, OpenTelemetryLayer};
 use tracing_subscriber::{
 	EnvFilter, Layer, layer::SubscriberExt as _, util::SubscriberInitExt as _,
@@ -45,21 +39,27 @@ fn mk_resource(
 	version: &'static str,
 	resource_metadata: Map<String, String>,
 ) -> Resource {
-	Resource::from_schema_url(
-		[KeyValue::new(SERVICE_NAME, service_name), KeyValue::new(SERVICE_VERSION, version)]
-			.into_iter()
-			.chain(resource_metadata.into_iter().map(|(k, v)| KeyValue::new(k, v))),
-		SCHEMA_URL,
-	)
+	Resource::builder()
+		.with_attributes(
+			resource_metadata.into_iter().map(|(key, value)| KeyValue::new(key, value)),
+		)
+		.with_detector(Box::new(K8sResourceDetector {}))
+		.with_detector(Box::new(ProcessResourceDetector {}))
+		.with_attribute(KeyValue::new(SERVICE_VERSION, version))
+		.with_service_name(service_name)
+		.build()
 }
 
 /// Setup a Otel exporter and a provider for traces
-fn init_traces(endpoint: OtelUrl, resource: Resource) -> Result<TracerProvider, TraceError> {
+fn init_traces(
+	endpoint: OtelUrl,
+	resource: Resource,
+) -> Result<SdkTracerProvider, ExporterBuildError> {
 	let exporter = SpanExporter::builder().with_tonic().with_endpoint(endpoint.url).build()?;
-	let tracer_provider = TracerProvider::builder()
+	let tracer_provider = SdkTracerProvider::builder()
 		.with_id_generator(RandomIdGenerator::default())
 		.with_resource(resource)
-		.with_batch_exporter(exporter, runtime::Tokio)
+		.with_batch_exporter(exporter)
 		.build();
 
 	opentelemetry::global::set_tracer_provider(tracer_provider.clone());
@@ -67,14 +67,17 @@ fn init_traces(endpoint: OtelUrl, resource: Resource) -> Result<TracerProvider, 
 }
 
 /// Setup a Otel exporter and a provider for metrics
-fn init_metrics(endpoint: OtelUrl, resource: Resource) -> Result<SdkMeterProvider, MetricError> {
+fn init_metrics(
+	endpoint: OtelUrl,
+	resource: Resource,
+) -> Result<SdkMeterProvider, ExporterBuildError> {
 	let exporter = opentelemetry_otlp::MetricExporter::builder()
 		.with_tonic()
 		.with_endpoint(endpoint.url)
 		.with_temporality(opentelemetry_sdk::metrics::Temporality::default())
 		.build()?;
 
-	let reader = PeriodicReader::builder(exporter, runtime::Tokio).build();
+	let reader = PeriodicReader::builder(exporter).build();
 
 	let meter_provider =
 		MeterProviderBuilder::default().with_resource(resource).with_reader(reader).build();
@@ -84,13 +87,13 @@ fn init_metrics(endpoint: OtelUrl, resource: Resource) -> Result<SdkMeterProvide
 }
 
 /// Setup a Otel exporter and a provider for logs
-fn init_logs(endpoint: OtelUrl, resource: Resource) -> Result<LoggerProvider, LogError> {
+fn init_logs(
+	endpoint: OtelUrl,
+	resource: Resource,
+) -> Result<SdkLoggerProvider, ExporterBuildError> {
 	let exporter = LogExporter::builder().with_tonic().with_endpoint(endpoint.url).build()?;
 
-	Ok(LoggerProvider::builder()
-		.with_resource(resource)
-		.with_batch_exporter(exporter, runtime::Tokio)
-		.build())
+	Ok(SdkLoggerProvider::builder().with_resource(resource).with_batch_exporter(exporter).build())
 }
 
 /// Initializes the OpenTelemetry
@@ -230,9 +233,9 @@ pub fn init_otel(
 #[derive(Debug)]
 pub struct ProvidersGuard {
 	/// Logger provider
-	logger_provider: Option<LoggerProvider>,
+	logger_provider: Option<SdkLoggerProvider>,
 	/// Tracer provider
-	tracer_provider: Option<TracerProvider>,
+	tracer_provider: Option<SdkTracerProvider>,
 	/// Meter provider
 	meter_provider: Option<SdkMeterProvider>,
 }
@@ -270,12 +273,8 @@ impl Drop for ProvidersGuard {
 #[allow(missing_docs)]
 #[derive(Debug, thiserror::Error)]
 pub enum OtelInitError {
-	#[error("Logger initialization error: {0}")]
-	LoggerInitError(#[from] LogError),
-	#[error("Tracer initialization error: {0}")]
-	TracerInitError(#[from] TraceError),
-	#[error("Meter initialization error: {0}")]
-	MeterInitError(#[from] MetricError),
+	#[error("Error building the exporter: {0}")]
+	BuildExporterError(#[from] ExporterBuildError),
 	#[error("Parsing EnvFilter directives error: {0}")]
 	EnvFilterError(#[from] tracing_subscriber::filter::ParseError),
 }

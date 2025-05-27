@@ -50,7 +50,7 @@ pub fn add_metrics_layer(
 
 	router.chain_if(enabled, |router| {
 		let global_meter = opentelemetry::global::meter(service_name);
-		let layer = tower_otel_http_metrics::HTTPMetricsLayerBuilder::new()
+		let layer = tower_otel_http_metrics::HTTPMetricsLayerBuilder::builder()
 			.with_meter(global_meter)
 			.build()
 			.inspect_err(|e| tracing::warn!("Error creating metrics layer: {e:?}"))

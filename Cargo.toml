@@ -22,13 +22,13 @@ async-trait = { version = "^0.1.51" }
 famedly_rust_utils = { version = "1.0.0", features = ["level_filter"] }
 http = { version = "1.2.0" }
 once_cell = { version = "1.20.2" }
-opentelemetry = { version = "0.27.1" }
-opentelemetry-appender-tracing = { version = "0.27.0" }
-opentelemetry-otlp = { version = "0.27.0" }
-opentelemetry-semantic-conventions = { version = "0.27.0" }
-opentelemetry_sdk = { version = "0.27.1", features = ["rt-tokio"] }
+opentelemetry = { version = "0.29.0" }
+opentelemetry-appender-tracing = { version = "0.29.0" }
+opentelemetry-otlp = { version = "0.29.0", features = ["grpc-tonic"] }
+opentelemetry-semantic-conventions = { version = "0.29.0" }
+opentelemetry_sdk = { version = "0.29.0", features = ["rt-tokio"] }
 thiserror = "1.0.64"
-tracing-opentelemetry = { version = "0.28.0" }
+tracing-opentelemetry = { version = "0.30.0" }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter", "json"] }
 tracing = "0.1.40"
 serde = { version = "1.0.210", features = ["derive"] }
@@ -37,15 +37,16 @@ schemars = { version = "0.8.22", optional = true }
 serde_yaml = { version = "0.9.34", optional = true }
 
 # reqwest-middleware
-opentelemetry-http = { version = "0.27.0", optional = true }
+opentelemetry-http = { version = "0.29.0", optional = true }
 reqwest = { version = "0.12.12", optional = true }
 reqwest-middleware = { version = "0.4.0", optional = true }
 
 # axum
 axum = { version = "^0.8", optional = true }
-tower-otel-http-metrics = { version = "0.10.0", features = [
+tower-otel-http-metrics = { version = "0.14.0", features = [
     "axum",
 ], optional = true }
+opentelemetry-resource-detectors = "0.8.0"
 
 [dev-dependencies]
 tokio = { version = "1.43.0", features = ["full"] }
