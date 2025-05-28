@@ -219,12 +219,16 @@ pub fn init_otel(
 
 	// Initialize the tracing subscriber with the stdout layer and
 	// layers for exporting over OpenTelemetry the logs, traces and metrics.
-	tracing_subscriber::registry()
+	let subscriber = tracing_subscriber::registry()
 		.with(logs_layer)
 		.with(stdout_layer)
 		.with(meter_layer)
-		.with(tracer_layer)
-		.init();
+		.with(tracer_layer);
+
+	#[cfg(feature = "tracing-error")]
+	let subscriber = subscriber.with(tracing_error::ErrorLayer::default());
+
+	subscriber.init();
 
 	Ok(ProvidersGuard { logger_provider, tracer_provider, meter_provider })
 }
