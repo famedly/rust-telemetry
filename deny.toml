@@ -19,6 +19,7 @@ allow = [
     "CC0-1.0",
     "MS-PL",
     "Zlib",
+    "Unicode-3.0",
 ]
 # Do not warn if we allow a license not used by any crate in the dependency graph
 unused-allowed-license = "allow"
