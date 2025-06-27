@@ -19,16 +19,18 @@ use tracing_opentelemetry::OpenTelemetrySpanExt as _;
 /// Example
 ///
 /// ```rust,no_run
-/// use rust_telemetry::reexport::reqwest_middleware;
+/// use rust_telemetry::{
+/// 	reexport::reqwest_middleware, reqwest_middleware::OtelMiddleware,
+/// };
 ///
 /// #[tokio::main]
 /// async fn main() {
 /// 	let reqwest_client = reqwest::Client::builder().build().unwrap();
 /// 	let client = reqwest_middleware::ClientBuilder::new(reqwest_client)
 /// 		// Insert the tracing middleware
-/// 		.with(reqwest_middleware::OtelMiddleware::default())
+/// 		.with(OtelMiddleware::default())
 /// 		.build();
-/// 	client.get("http://localhost").send().await;
+/// 	let _ = client.get("http://localhost").send().await;
 /// }
 /// ```
 #[derive(Debug, Default)]
