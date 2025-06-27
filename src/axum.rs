@@ -12,9 +12,9 @@ use super::config::OtelConfig;
 ///
 /// Example
 ///
-/// This example shows how to call the [`add_axum_metrics_layer`] however, in
-/// this case, the layer is not added because the default [`OtelConfig`] has the
-/// metrics exporting disabled
+/// This example shows how to call the macro. However, in this case, the layer
+/// is not added because the default [`OtelConfig`] has the metrics exporting
+/// disabled
 ///
 /// ```rust
 /// use axum::routing::{Router, get};

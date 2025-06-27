@@ -6,8 +6,7 @@
 //!
 //! This module provides a reqwest middleware that will propagate the
 //! OpenTelemetry current context by setting the appropriated headers on the
-//! request. This layer should be used with the crate [`reqwest_middleware`]
-
+//! request. Use with the reexported [`reqwest_middleware`].
 use http::Extensions;
 use opentelemetry_http::HeaderInjector;
 use reqwest::{Request, Response};
@@ -19,15 +18,15 @@ use tracing_opentelemetry::OpenTelemetrySpanExt as _;
 ///
 /// Example
 ///
-/// ```rust
-/// use rust_telemetry::reqwest_middleware::OtelMiddleware;
+/// ```rust,no_run
+/// use rust_telemetry::reexport::reqwest_middleware;
 ///
 /// #[tokio::main]
 /// async fn main() {
 /// 	let reqwest_client = reqwest::Client::builder().build().unwrap();
 /// 	let client = reqwest_middleware::ClientBuilder::new(reqwest_client)
 /// 		// Insert the tracing middleware
-/// 		.with(OtelMiddleware::default())
+/// 		.with(reqwest_middleware::OtelMiddleware::default())
 /// 		.build();
 /// 	client.get("http://localhost").send().await;
 /// }

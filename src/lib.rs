@@ -30,6 +30,7 @@ use tracing_subscriber::{
 #[cfg(feature = "axum")]
 pub mod axum;
 pub mod config;
+pub mod reexport;
 #[cfg(feature = "reqwest-middleware")]
 pub mod reqwest_middleware;
 
