@@ -8,6 +8,12 @@ SPDX-License-Identifier: Apache-2.0
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.1] - 2025-06-27
+
+### 📚 Documentation
+
+- Fix doc example
+
 ## [1.1.0] - 2025-06-27
 
 ### 🚀 Features
@@ -22,6 +28,10 @@ All notable changes to this project will be documented in this file.
 ### Bump
 
 - Update opentelemetry version
+
+### Release
+
+- V1.1.0
 
 ## [1.0.0] - 2025-04-29
 
