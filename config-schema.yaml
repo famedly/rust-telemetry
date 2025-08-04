@@ -59,12 +59,18 @@ definitions:
     description: Provider configuration for OpenTelemetry export
     type: object
     properties:
+      dependencies_levels:
+        description: Levels for the dependencies
+        default: {}
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/LevelFilter'
       enabled:
         description: Enables provider
         default: false
         type: boolean
       general_level:
-        description: Level for the dependencies
+        description: General level
         default: info
         allOf:
         - $ref: '#/definitions/LevelFilter'
@@ -77,12 +83,18 @@ definitions:
     description: Stdout logs configuration
     type: object
     properties:
+      dependencies_levels:
+        description: Level for the dependencies
+        default: {}
+        type: object
+        additionalProperties:
+          $ref: '#/definitions/LevelFilter'
       enabled:
         description: Enables the stdout logs
         default: true
         type: boolean
       general_level:
-        description: Level for the dependencies
+        description: General level
         default: info
         allOf:
         - $ref: '#/definitions/LevelFilter'

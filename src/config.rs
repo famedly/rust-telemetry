@@ -6,7 +6,7 @@
 //!
 //! Module containing the configuration struct for the OpenTelemetry
 
-use std::collections::BTreeMap as Map;
+use std::collections::{BTreeMap as Map, HashMap};
 
 use famedly_rust_utils::LevelFilter;
 use serde::Deserialize;
@@ -57,6 +57,7 @@ impl OtelConfig {
 				enabled: true,
 				level: tracing_subscriber::filter::LevelFilter::TRACE.into(),
 				general_level: tracing_subscriber::filter::LevelFilter::INFO.into(),
+				dependencies_levels: HashMap::new(),
 				json_output: false,
 			}),
 			exporter: None,
@@ -94,9 +95,12 @@ pub struct StdoutLogsConfig {
 	/// Level for the crate
 	#[serde(default = "default_level_filter")]
 	pub level: LevelFilter,
-	/// Level for the dependencies
+	/// General level
 	#[serde(default = "default_level_filter")]
 	pub general_level: LevelFilter,
+	/// Level for the dependencies
+	#[serde(default)]
+	pub dependencies_levels: HashMap<String, LevelFilter>,
 	/// Output structured JSON logs
 	#[serde(default)]
 	pub json_output: bool,
@@ -112,22 +116,37 @@ pub struct ProviderConfig {
 	/// Level for the crate
 	#[serde(default = "default_level_filter")]
 	pub level: LevelFilter,
-	/// Level for the dependencies
+	/// General level
 	#[serde(default = "default_level_filter")]
 	pub general_level: LevelFilter,
+	/// Levels for the dependencies
+	#[serde(default)]
+	pub dependencies_levels: HashMap<String, LevelFilter>,
 }
 
 impl ProviderConfig {
 	/// Builds a trace filter
 	pub(crate) fn get_filter(&self, crate_name: &'static str) -> String {
-		format!("{},{}={}", self.general_level, crate_name, self.level)
+		format!(
+			"{},{}{}={}",
+			self.general_level,
+			build_dependencies_level_string(&self.dependencies_levels),
+			crate_name,
+			self.level
+		)
 	}
 }
 
 impl StdoutLogsConfig {
 	/// Builds a trace filter
 	pub(crate) fn get_filter(&self, crate_name: &'static str) -> String {
-		format!("{},{}={}", self.general_level, crate_name, self.level)
+		format!(
+			"{},{}{}={}",
+			self.general_level,
+			build_dependencies_level_string(&self.dependencies_levels),
+			crate_name,
+			self.level
+		)
 	}
 }
 
@@ -137,6 +156,7 @@ impl Default for StdoutLogsConfig {
 			enabled: true,
 			level: default_level_filter(),
 			general_level: default_level_filter(),
+			dependencies_levels: HashMap::new(),
 			json_output: false,
 		}
 	}
@@ -148,6 +168,7 @@ impl Default for ProviderConfig {
 			enabled: false,
 			level: default_level_filter(),
 			general_level: default_level_filter(),
+			dependencies_levels: HashMap::new(),
 		}
 	}
 }
@@ -160,4 +181,15 @@ const fn default_level_filter() -> LevelFilter {
 /// Workaround for [serde-rs/serde#368](https://github.com/serde-rs/serde/issues/368)
 const fn true_() -> bool {
 	true
+}
+
+/// Builds a string that configures the filter level of each dependency on the
+/// map
+fn build_dependencies_level_string(dependencies_levels: &HashMap<String, LevelFilter>) -> String {
+	let mut dependencies_levels =
+		dependencies_levels.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join(",");
+	if !dependencies_levels.is_empty() {
+		dependencies_levels.push(',');
+	}
+	dependencies_levels
 }

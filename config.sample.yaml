@@ -15,6 +15,11 @@ stdout:
   # <off|error|warn|info|debug|trace> optional, default: info
   general_level: info
 
+  # Level for the dependencies
+  # <off|error|warn|info|debug|trace> optional, default: empty
+  dependencies_levels:
+    "famedly-rust-utils": debug
+
   # Output structured JSON logs
   # optional, default: false
   json_output: false
@@ -47,6 +52,11 @@ exporter:
     # <off|error|warn|info|debug|trace> optional, default: info
     general_level: LevelFilter,
 
+    # Level for the dependencies
+    # <off|error|warn|info|debug|trace> optional, default: empty
+    dependencies_levels:
+      "famedly-rust-utils": debug
+
   # Traces exporting config
   # optional
   traces:
@@ -61,6 +71,11 @@ exporter:
     # <off|error|warn|info|debug|trace> optional, default: info
     general_level: LevelFilter,
 
+    # Level for the dependencies
+    # <off|error|warn|info|debug|trace> optional, default: empty
+    dependencies_levels:
+      "famedly-rust-utils": debug
+
   # Metrics exporting config
   # optional
   metrics:
@@ -74,3 +89,8 @@ exporter:
     # Level for the dependencies
     # <off|error|warn|info|debug|trace> optional, default: info
     general_level: LevelFilter,
+
+    # Level for the dependencies
+    # <off|error|warn|info|debug|trace> optional, default: empty
+    dependencies_levels:
+      "famedly-rust-utils": debug
