@@ -7,6 +7,7 @@ name = "rust-telemetry"
 version = "1.0.0"
 authors = []
 edition = "2024"
+repository = "https://github.com/famedly/rust-telemetry"
 resolver = "2"
 license = "Apache-2.0"
 description = "Observability helpers originally developed for internal use at Famedly"
