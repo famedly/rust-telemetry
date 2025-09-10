@@ -8,11 +8,30 @@ SPDX-License-Identifier: Apache-2.0
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2025-09-10
+
+### 🚀 Features
+
+- Add possibility to set level per dependency
+
+### 📚 Documentation
+
+- Include link to source code repository in Cargo.toml
+
+### Bump
+
+- Update opentelemetry version
+- Bump dependencies
+
 ## [1.1.1] - 2025-06-27
 
 ### 📚 Documentation
 
 - Fix doc example
+
+### Release
+
+- V1.1.1
 
 ## [1.1.0] - 2025-06-27
 
