@@ -33,25 +33,19 @@ use super::config::OtelConfig;
 #[macro_export]
 macro_rules! add_axum_metrics_layer {
 	($router:expr, $config:expr) => {
-		$crate::axum::add_metrics_layer($router, $config, env!("CARGO_PKG_NAME"))
+		$crate::axum::add_metrics_layer($router, $config)
 	};
 }
 
 #[allow(missing_docs)]
-pub fn add_metrics_layer(
-	router: Router,
-	config: Option<&OtelConfig>,
-	service_name: &'static str,
-) -> Router {
+pub fn add_metrics_layer(router: Router, config: Option<&OtelConfig>) -> Router {
 	let enabled = config
 		.and_then(|config| config.exporter.as_ref())
 		.and_then(|exporter| exporter.metrics.as_ref())
 		.is_some_and(|metrics| metrics.enabled);
 
 	router.chain_if(enabled, |router| {
-		let global_meter = opentelemetry::global::meter(service_name);
-		let layer = tower_otel_http_metrics::HTTPMetricsLayerBuilder::builder()
-			.with_meter(global_meter)
+		let layer = opentelemetry_instrumentation_tower::HTTPLayerBuilder::builder()
 			.build()
 			.inspect_err(|e| tracing::warn!("Error creating metrics layer: {e:?}"))
 			.ok();
