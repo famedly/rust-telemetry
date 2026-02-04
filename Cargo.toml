@@ -21,18 +21,18 @@ required-features = ["schemars", "serde_yaml"]
 [dependencies]
 async-trait = { version = "^0.1.51" }
 famedly_rust_utils = { version = "1.1.0", features = [
-    "level_filter",
-    "schemars",
+  "level_filter",
+  "schemars",
 ] }
 http = { version = "1.2.0" }
 once_cell = { version = "1.20.2" }
-opentelemetry = { version = "0.30.0" }
-opentelemetry-appender-tracing = { version = "0.30.0" }
-opentelemetry-otlp = { version = "0.30.0", features = ["grpc-tonic"] }
-opentelemetry-semantic-conventions = { version = "0.30.0" }
-opentelemetry_sdk = { version = "0.30.0", features = ["rt-tokio"] }
+opentelemetry = { version = "0.31.0" }
+opentelemetry-appender-tracing = { version = "0.31.0" }
+opentelemetry-otlp = { version = "0.31.0", features = ["grpc-tonic"] }
+opentelemetry-semantic-conventions = { version = "0.31.0" }
+opentelemetry_sdk = { version = "0.31.0", features = ["rt-tokio"] }
 thiserror = "1.0.64"
-tracing-opentelemetry = { version = "0.31.0" }
+tracing-opentelemetry = { version = "0.32.0" }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter", "json"] }
 tracing = "0.1.40"
 serde = { version = "1.0.210", features = ["derive"] }
@@ -44,25 +44,25 @@ serde_yaml = { version = "0.9.34", optional = true }
 tracing-error = { version = "0.2.1", optional = true }
 
 # reqwest-middleware
-opentelemetry-http = { version = "0.30.0", optional = true }
+opentelemetry-http = { version = "0.31.0", optional = true }
 reqwest = { version = "0.13", optional = true }
 reqwest-middleware = { version = "0.5.1", optional = true }
 
 # axum
 axum = { version = "^0.8", optional = true }
 tower-otel-http-metrics = { version = "0.16.0", features = [
-    "axum",
+  "axum",
 ], optional = true }
-opentelemetry-resource-detectors = "0.9.0"
+opentelemetry-resource-detectors = "0.10.0"
 
 [dev-dependencies]
 tokio = { version = "1.43.0", features = ["full"] }
 
 [features]
 reqwest-middleware = [
-    "dep:reqwest",
-    "dep:reqwest-middleware",
-    "dep:opentelemetry-http",
+  "dep:reqwest",
+  "dep:reqwest-middleware",
+  "dep:opentelemetry-http",
 ]
 axum = ["dep:axum", "dep:tower-otel-http-metrics"]
 schemars = ["dep:schemars", "famedly_rust_utils/schemars"]
