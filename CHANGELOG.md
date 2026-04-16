@@ -1,3 +1,14 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+
+## [1.3.0] - 2026-04-16
+
+### Miscellaneous Tasks
+
+- Bump reqwest and famedly_rust_utils
+
 <!--
 SPDX-FileCopyrightText: 2025 Famedly GmbH (info@famedly.com)
 
