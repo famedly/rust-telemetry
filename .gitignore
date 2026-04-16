@@ -5,5 +5,4 @@
 
 .env
 /target
-Cargo.lock
 /cargo_home

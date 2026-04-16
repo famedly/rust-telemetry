@@ -20,7 +20,7 @@ required-features = ["schemars", "serde_yaml"]
 
 [dependencies]
 async-trait = { version = "^0.1.51" }
-famedly_rust_utils = { version = "1.0.2", features = [
+famedly_rust_utils = { version = "1.1.0", features = [
     "level_filter",
     "schemars",
 ] }
@@ -45,8 +45,8 @@ tracing-error = { version = "0.2.1", optional = true }
 
 # reqwest-middleware
 opentelemetry-http = { version = "0.30.0", optional = true }
-reqwest = { version = "0.12.12", optional = true }
-reqwest-middleware = { version = "0.4.0", optional = true }
+reqwest = { version = "0.13", optional = true }
+reqwest-middleware = { version = "0.5.1", optional = true }
 
 # axum
 axum = { version = "^0.8", optional = true }
