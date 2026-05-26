@@ -35,7 +35,7 @@ jobs:
           command: check bans licenses sources
   rust:
     needs: compliance
-    uses: famedly/backend-build-workflows/.github/workflows/rust-workflow.yml@v2
+    uses: famedly/backend-build-workflows/.github/workflows/rust-workflow.yml@fcc2ec82a725d5c4c9c6a8f19e8df101c178dcb6
     secrets: inherit
     with:
       clippy_args: '--all-features'
@@ -45,7 +45,7 @@ jobs:
 
   publish:
     needs: rust
-    uses: famedly/backend-build-workflows/.github/workflows/publish-crate.yml@v2
+    uses: famedly/backend-build-workflows/.github/workflows/publish-crate.yml@fcc2ec82a725d5c4c9c6a8f19e8df101c178dcb6
     with:
       registry-name: "crates-io"
       registry-index: "https://github.com/rust-lang/crates.io-index"
