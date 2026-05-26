@@ -28,9 +28,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: REUSE Compliance Check
-        uses: fsfe/reuse-action@v5
+        uses: fsfe/reuse-action@6ac5c823270d369f01e3c491c708f706f2bdc355
       - name: Dependency license check
-        uses: EmbarkStudios/cargo-deny-action@v2
+        uses: EmbarkStudios/cargo-deny-action@a531616d8ce3b9177443e48a1159bc945a099823
         with:
           command: check bans licenses sources
   rust:
