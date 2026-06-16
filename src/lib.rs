@@ -287,10 +287,7 @@ pub enum OtelInitError {
 #[cfg(test)]
 mod tests {
 	#![allow(clippy::expect_used)]
-	use super::{
-		config::{ExporterConfig, OtelConfig, ProviderConfig},
-		init_otel,
-	};
+	use super::config::{ExporterConfig, OtelConfig, ProviderConfig};
 	use crate::config::StdoutLogsConfig;
 
 	#[tokio::test]
