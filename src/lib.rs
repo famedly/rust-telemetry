@@ -7,7 +7,7 @@
 //! Lib containing the definitions and initializations of the OpenTelemetry
 //! tools
 #![cfg_attr(all(doc, not(doctest)), feature(doc_auto_cfg))]
-use std::{collections::BTreeMap as Map, str::FromStr as _};
+use std::collections::BTreeMap as Map;
 
 use config::{OtelConfig, OtelUrl, StdoutLogsConfig};
 use opentelemetry::{KeyValue, trace::TracerProvider as _};
@@ -23,9 +23,7 @@ use opentelemetry_sdk::{
 };
 use opentelemetry_semantic_conventions::resource::SERVICE_VERSION;
 use tracing_opentelemetry::{MetricsLayer, OpenTelemetryLayer};
-use tracing_subscriber::{
-	EnvFilter, Layer, layer::SubscriberExt as _, util::SubscriberInitExt as _,
-};
+use tracing_subscriber::{Layer, layer::SubscriberExt as _, util::SubscriberInitExt as _};
 
 #[cfg(feature = "axum")]
 pub mod axum;
@@ -155,7 +153,7 @@ pub fn init_otel(
 		.or(Some(&StdoutLogsConfig::default()))
 		.and_then(|stdout| stdout.enabled.then_some(stdout))
 		.map(|logger_config| {
-			let filter_fmt = EnvFilter::from_str(&logger_config.get_filter(main_crate))?;
+			let filter_fmt = logger_config.get_filter(main_crate)?;
 			let stdout_layer = tracing_subscriber::fmt::layer().with_thread_names(true);
 			Ok::<_, OtelInitError>(
 				if logger_config.json_output {
@@ -176,7 +174,7 @@ pub fn init_otel(
 		.as_ref()
 		.and_then(|(exporter, resource)| {
 			exporter.logs.as_ref().and_then(|c| c.enabled.then_some(c)).map(|logger_config| {
-				let filter_otel = EnvFilter::from_str(&logger_config.get_filter(main_crate))?;
+				let filter_otel = logger_config.get_filter(main_crate)?;
 				let logger_provider = init_logs(exporter.endpoint.clone(), resource.clone())?;
 
 				// Create a new OpenTelemetryTracingBridge using the above LoggerProvider.
@@ -193,7 +191,7 @@ pub fn init_otel(
 		.as_ref()
 		.and_then(|(exporter, resource)| {
 			exporter.traces.as_ref().and_then(|c| c.enabled.then_some(c)).map(|tracer_config| {
-				let trace_filter = EnvFilter::from_str(&tracer_config.get_filter(main_crate))?;
+				let trace_filter = tracer_config.get_filter(main_crate)?;
 				let tracer_provider = init_traces(exporter.endpoint.clone(), resource.clone())?;
 				let tracer = tracer_provider.tracer(service_name);
 				let tracer_layer = OpenTelemetryLayer::new(tracer).with_filter(trace_filter);
@@ -207,7 +205,7 @@ pub fn init_otel(
 		.as_ref()
 		.and_then(|(exporter, resource)| {
 			exporter.metrics.as_ref().and_then(|c| c.enabled.then_some(c)).map(|meter_config| {
-				let metrics_filter = EnvFilter::from_str(&meter_config.get_filter(main_crate))?;
+				let metrics_filter = meter_config.get_filter(main_crate)?;
 				let meter_provider = init_metrics(exporter.endpoint.clone(), resource.clone())?;
 				let meter_layer =
 					MetricsLayer::new(meter_provider.clone()).with_filter(metrics_filter);
