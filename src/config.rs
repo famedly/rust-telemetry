@@ -10,6 +10,7 @@ use std::collections::{BTreeMap as Map, HashMap};
 
 use famedly_rust_utils::LevelFilter;
 use serde::Deserialize;
+use tracing_subscriber::EnvFilter;
 use url::Url;
 
 /// Default gRPC Otel endpoint
@@ -126,27 +127,21 @@ pub struct ProviderConfig {
 
 impl ProviderConfig {
 	/// Builds a trace filter
-	pub(crate) fn get_filter(&self, crate_name: &'static str) -> String {
-		format!(
-			"{},{}{}={}",
-			self.general_level,
-			build_dependencies_level_string(&self.dependencies_levels),
-			crate_name,
-			self.level
-		)
+	pub(crate) fn get_filter(
+		&self,
+		crate_name: &'static str,
+	) -> Result<EnvFilter, tracing_subscriber::filter::ParseError> {
+		filter_from_config(self.general_level, &self.dependencies_levels, crate_name, self.level)
 	}
 }
 
 impl StdoutLogsConfig {
 	/// Builds a trace filter
-	pub(crate) fn get_filter(&self, crate_name: &'static str) -> String {
-		format!(
-			"{},{}{}={}",
-			self.general_level,
-			build_dependencies_level_string(&self.dependencies_levels),
-			crate_name,
-			self.level
-		)
+	pub(crate) fn get_filter(
+		&self,
+		crate_name: &'static str,
+	) -> Result<EnvFilter, tracing_subscriber::filter::ParseError> {
+		filter_from_config(self.general_level, &self.dependencies_levels, crate_name, self.level)
 	}
 }
 
@@ -183,13 +178,17 @@ const fn true_() -> bool {
 	true
 }
 
-/// Builds a string that configures the filter level of each dependency on the
-/// map
-fn build_dependencies_level_string(dependencies_levels: &HashMap<String, LevelFilter>) -> String {
-	let mut dependencies_levels =
-		dependencies_levels.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join(",");
-	if !dependencies_levels.is_empty() {
-		dependencies_levels.push(',');
+/// Given options for a series of dependencies, build a trace filter
+fn filter_from_config(
+	general_level: LevelFilter,
+	dependencies_levels: &HashMap<String, LevelFilter>,
+	crate_name: &'static str,
+	level: LevelFilter,
+) -> Result<EnvFilter, tracing_subscriber::filter::ParseError> {
+	let mut filter = EnvFilter::new(general_level.to_string());
+	for (target, level_filter) in dependencies_levels {
+		filter = filter.add_directive(format!("{target}={level_filter}").parse()?);
 	}
-	dependencies_levels
+	filter = filter.add_directive(format!("{crate_name}={}", level).parse()?);
+	Ok(filter)
 }
