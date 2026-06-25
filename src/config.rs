@@ -168,7 +168,18 @@ impl Default for ProviderConfig {
 			enabled: false,
 			level: default_level_filter(),
 			general_level: default_level_filter(),
-			dependencies_levels: HashMap::new(),
+			// We have to ignore these specific crates to avoid them emitting traces
+			// after our OTLP collector has been turned off, causing an infinite loop.
+			//
+			// See the issue:  https://github.com/open-telemetry/opentelemetry-rust/issues/2877
+			// See the source of the workaround:
+			// https://github.com/open-telemetry/opentelemetry-rust/blob/v0.31.0/opentelemetry-otlp/examples/basic-otlp/src/main.rs#L69-L86
+			dependencies_levels: HashMap::from([
+				("hyper".to_owned(), LevelFilter(tracing::level_filters::LevelFilter::OFF)),
+				("tonic".to_owned(), LevelFilter(tracing::level_filters::LevelFilter::OFF)),
+				("h2".to_owned(), LevelFilter(tracing::level_filters::LevelFilter::OFF)),
+				("reqwest".to_owned(), LevelFilter(tracing::level_filters::LevelFilter::OFF)),
+			]),
 		}
 	}
 }
