@@ -30,9 +30,13 @@ opentelemetry = { version = "0.30.0" }
 opentelemetry-appender-tracing = { version = "0.30.0" }
 opentelemetry-otlp = { version = "0.30.0", features = [
     "grpc-tonic",
+    # TLS (https endpoints) for the gRPC exporter, using system CA roots
+    "tls-roots",
     "http-proto",
     "http-json",
     "reqwest-blocking-client",
+    # TLS (https endpoints) for the HTTP exporters, using system CA roots
+    "reqwest-rustls",
 ] }
 opentelemetry-semantic-conventions = { version = "0.30.0" }
 opentelemetry_sdk = { version = "0.30.0", features = ["rt-tokio"] }
