@@ -9,7 +9,7 @@
 use std::collections::{BTreeMap as Map, HashMap};
 
 use famedly_rust_utils::LevelFilter;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use url::Url;
 
 /// Default gRPC Otel endpoint
@@ -65,13 +65,46 @@ impl OtelConfig {
 	}
 }
 
+/// OTLP transport protocol
+#[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub enum OtlpProtocol {
+	/// Export using gRPC
+	#[default]
+	#[serde(rename = "grpc")]
+	Grpc,
+	/// Export using HTTP with protobuf-encoded payloads
+	#[serde(rename = "http/protobuf")]
+	HttpProtobuf,
+	/// Export using HTTP with JSON-encoded payloads
+	#[serde(rename = "http/json")]
+	HttpJson,
+}
+
+impl From<OtlpProtocol> for opentelemetry_otlp::Protocol {
+	fn from(protocol: OtlpProtocol) -> Self {
+		match protocol {
+			OtlpProtocol::Grpc => Self::Grpc,
+			OtlpProtocol::HttpProtobuf => Self::HttpBinary,
+			OtlpProtocol::HttpJson => Self::HttpJson,
+		}
+	}
+}
+
 /// Configuration for exporting OpenTelemetry data
 #[cfg_attr(feature = "schemars", derive(schemars::JsonSchema))]
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct ExporterConfig {
-	/// gRPC endpoint for exporting using OTELP
+	/// Endpoint for exporting using OTLP. See the `protocol` option for how
+	/// the transport protocol is selected. For the HTTP protocols, the
+	/// signal-specific path (e.g. `/v1/traces`) is appended automatically.
 	#[serde(default)]
 	pub endpoint: OtelUrl,
+	/// OTLP transport protocol (`grpc`, `http/protobuf` or `http/json`).
+	/// The `OTEL_EXPORTER_OTLP_PROTOCOL` environment variable takes precedence
+	/// over this option when set.
+	#[serde(default)]
+	pub protocol: OtlpProtocol,
 	/// Key value mapping of the OTEL resource. See [Resource semantic conventions](https://opentelemetry.io/docs/specs/semconv/resource/) for what can be set here.
 	/// Only string values are supported now.
 	/// This crate sets `service.name` and `service.version` by default.

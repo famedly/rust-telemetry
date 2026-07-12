@@ -26,9 +26,14 @@ stdout:
 
 # optional
 exporter:
-  # gRPC endpoint for exporting using OTELP
+  # Endpoint for exporting using OTLP
   # optional, default: "http://localhost:4317"
   endpoint: http://localhost:4317
+
+  # OTLP transport protocol. The OTEL_EXPORTER_OTLP_PROTOCOL environment
+  # variable takes precedence over this option when set.
+  # <grpc|http/protobuf|http/json> optional, default: grpc
+  protocol: grpc
 
   # Key value mapping of the OTEL resource.
   # See https://opentelemetry.io/docs/specs/semconv/resource/

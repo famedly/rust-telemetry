@@ -9,10 +9,12 @@
 #![cfg_attr(all(doc, not(doctest), docsrs), feature(doc_cfg))]
 use std::{collections::BTreeMap as Map, str::FromStr as _};
 
-use config::{OtelConfig, OtelUrl, StdoutLogsConfig};
+use config::{OtelConfig, OtelUrl, OtlpProtocol, StdoutLogsConfig};
 use opentelemetry::{KeyValue, trace::TracerProvider as _};
 use opentelemetry_appender_tracing::layer::OpenTelemetryTracingBridge;
-use opentelemetry_otlp::{ExporterBuildError, LogExporter, SpanExporter, WithExportConfig as _};
+use opentelemetry_otlp::{
+	ExporterBuildError, LogExporter, Protocol, SpanExporter, WithExportConfig as _,
+};
 use opentelemetry_resource_detectors::{K8sResourceDetector, ProcessResourceDetector};
 use opentelemetry_sdk::{
 	Resource,
@@ -51,12 +53,52 @@ fn mk_resource(
 		.build()
 }
 
+/// Determine the OTLP transport protocol.
+///
+/// The `OTEL_EXPORTER_OTLP_PROTOCOL` environment variable (`grpc`,
+/// `http/protobuf` or `http/json`) takes precedence. When it is unset, empty
+/// or unrecognized, the `protocol` setting from
+/// [`ExporterConfig`](config::ExporterConfig) is used.
+#[allow(clippy::print_stderr)]
+fn otlp_protocol(config_protocol: OtlpProtocol) -> Protocol {
+	match std::env::var("OTEL_EXPORTER_OTLP_PROTOCOL").as_deref() {
+		Ok("grpc") => Protocol::Grpc,
+		Ok("http/protobuf") => Protocol::HttpBinary,
+		Ok("http/json") => Protocol::HttpJson,
+		Ok("") | Err(_) => config_protocol.into(),
+		Ok(other) => {
+			// The tracing subscriber is not initialized yet at this point,
+			// so fall back to stderr for the warning.
+			eprintln!(
+				"warning: unrecognized OTEL_EXPORTER_OTLP_PROTOCOL value {other:?}, using the configured protocol"
+			);
+			config_protocol.into()
+		}
+	}
+}
+
+/// Append the signal-specific path (e.g. `v1/traces`) to the configured
+/// endpoint, as required for OTLP/HTTP export.
+fn http_endpoint(url: &url::Url, signal_path: &str) -> String {
+	format!("{}/{signal_path}", url.as_str().trim_end_matches('/'))
+}
+
 /// Setup a Otel exporter and a provider for traces
 fn init_traces(
 	endpoint: OtelUrl,
+	protocol: Protocol,
 	resource: Resource,
 ) -> Result<SdkTracerProvider, ExporterBuildError> {
-	let exporter = SpanExporter::builder().with_tonic().with_endpoint(endpoint.url).build()?;
+	let exporter = match protocol {
+		Protocol::Grpc => {
+			SpanExporter::builder().with_tonic().with_endpoint(endpoint.url).build()?
+		}
+		protocol => SpanExporter::builder()
+			.with_http()
+			.with_protocol(protocol)
+			.with_endpoint(http_endpoint(&endpoint.url, "v1/traces"))
+			.build()?,
+	};
 	let tracer_provider = SdkTracerProvider::builder()
 		.with_id_generator(RandomIdGenerator::default())
 		.with_resource(resource)
@@ -70,13 +112,22 @@ fn init_traces(
 /// Setup a Otel exporter and a provider for metrics
 fn init_metrics(
 	endpoint: OtelUrl,
+	protocol: Protocol,
 	resource: Resource,
 ) -> Result<SdkMeterProvider, ExporterBuildError> {
-	let exporter = opentelemetry_otlp::MetricExporter::builder()
-		.with_tonic()
-		.with_endpoint(endpoint.url)
-		.with_temporality(opentelemetry_sdk::metrics::Temporality::default())
-		.build()?;
+	let exporter = match protocol {
+		Protocol::Grpc => opentelemetry_otlp::MetricExporter::builder()
+			.with_tonic()
+			.with_endpoint(endpoint.url)
+			.with_temporality(opentelemetry_sdk::metrics::Temporality::default())
+			.build()?,
+		protocol => opentelemetry_otlp::MetricExporter::builder()
+			.with_http()
+			.with_protocol(protocol)
+			.with_endpoint(http_endpoint(&endpoint.url, "v1/metrics"))
+			.with_temporality(opentelemetry_sdk::metrics::Temporality::default())
+			.build()?,
+	};
 
 	let reader = PeriodicReader::builder(exporter).build();
 
@@ -90,9 +141,19 @@ fn init_metrics(
 /// Setup a Otel exporter and a provider for logs
 fn init_logs(
 	endpoint: OtelUrl,
+	protocol: Protocol,
 	resource: Resource,
 ) -> Result<SdkLoggerProvider, ExporterBuildError> {
-	let exporter = LogExporter::builder().with_tonic().with_endpoint(endpoint.url).build()?;
+	let exporter = match protocol {
+		Protocol::Grpc => {
+			LogExporter::builder().with_tonic().with_endpoint(endpoint.url).build()?
+		}
+		protocol => LogExporter::builder()
+			.with_http()
+			.with_protocol(protocol)
+			.with_endpoint(http_endpoint(&endpoint.url, "v1/logs"))
+			.build()?,
+	};
 
 	Ok(SdkLoggerProvider::builder().with_resource(resource).with_batch_exporter(exporter).build())
 }
@@ -169,15 +230,20 @@ pub fn init_otel(
 		.transpose()?;
 
 	let exporter_with_resource = config.exporter.as_ref().map(|exporter| {
-		(exporter, mk_resource(service_name, pkg_version, exporter.resource_metadata.clone()))
+		(
+			exporter,
+			otlp_protocol(exporter.protocol),
+			mk_resource(service_name, pkg_version, exporter.resource_metadata.clone()),
+		)
 	});
 
 	let (logger_provider, logs_layer) = exporter_with_resource
 		.as_ref()
-		.and_then(|(exporter, resource)| {
+		.and_then(|(exporter, protocol, resource)| {
 			exporter.logs.as_ref().and_then(|c| c.enabled.then_some(c)).map(|logger_config| {
 				let filter_otel = EnvFilter::from_str(&logger_config.get_filter(main_crate))?;
-				let logger_provider = init_logs(exporter.endpoint.clone(), resource.clone())?;
+				let logger_provider =
+					init_logs(exporter.endpoint.clone(), *protocol, resource.clone())?;
 
 				// Create a new OpenTelemetryTracingBridge using the above LoggerProvider.
 				let logs_layer =
@@ -191,10 +257,11 @@ pub fn init_otel(
 
 	let (tracer_provider, tracer_layer) = exporter_with_resource
 		.as_ref()
-		.and_then(|(exporter, resource)| {
+		.and_then(|(exporter, protocol, resource)| {
 			exporter.traces.as_ref().and_then(|c| c.enabled.then_some(c)).map(|tracer_config| {
 				let trace_filter = EnvFilter::from_str(&tracer_config.get_filter(main_crate))?;
-				let tracer_provider = init_traces(exporter.endpoint.clone(), resource.clone())?;
+				let tracer_provider =
+					init_traces(exporter.endpoint.clone(), *protocol, resource.clone())?;
 				let tracer = tracer_provider.tracer(service_name);
 				let tracer_layer = OpenTelemetryLayer::new(tracer).with_filter(trace_filter);
 				Ok::<_, OtelInitError>((Some(tracer_provider), Some(tracer_layer)))
@@ -205,10 +272,11 @@ pub fn init_otel(
 
 	let (meter_provider, meter_layer) = exporter_with_resource
 		.as_ref()
-		.and_then(|(exporter, resource)| {
+		.and_then(|(exporter, protocol, resource)| {
 			exporter.metrics.as_ref().and_then(|c| c.enabled.then_some(c)).map(|meter_config| {
 				let metrics_filter = EnvFilter::from_str(&meter_config.get_filter(main_crate))?;
-				let meter_provider = init_metrics(exporter.endpoint.clone(), resource.clone())?;
+				let meter_provider =
+					init_metrics(exporter.endpoint.clone(), *protocol, resource.clone())?;
 				let meter_layer =
 					MetricsLayer::new(meter_provider.clone()).with_filter(metrics_filter);
 
@@ -287,7 +355,7 @@ pub enum OtelInitError {
 #[cfg(test)]
 mod tests {
 	#![allow(clippy::expect_used)]
-	use super::config::{ExporterConfig, OtelConfig, ProviderConfig};
+	use super::config::{ExporterConfig, OtelConfig, OtlpProtocol, ProviderConfig};
 	use crate::config::StdoutLogsConfig;
 
 	#[tokio::test]
@@ -355,6 +423,58 @@ mod tests {
 		};
 		let guard = init_otel!(&config_enabled_false).expect("Error initializing Otel");
 		assert!(guard.logger_provider.is_none());
+	}
+
+	// Each test runs in its own process under nextest, so mutating the
+	// process environment here doesn't leak into other tests.
+	#[tokio::test]
+	async fn test_http_json_protocol() {
+		// SAFETY: no other threads are reading or writing the environment at
+		// this point.
+		unsafe { std::env::set_var("OTEL_EXPORTER_OTLP_PROTOCOL", "http/json") };
+		let config = OtelConfig {
+			stdout: None,
+			exporter: Some(ExporterConfig {
+				logs: Some(ProviderConfig { enabled: true, ..Default::default() }),
+				traces: Some(ProviderConfig { enabled: true, ..Default::default() }),
+				..Default::default()
+			}),
+		};
+		let guard = init_otel!(&config).expect("Error initializing Otel");
+		assert!(guard.logger_provider.is_some());
+		assert!(guard.tracer_provider.is_some());
+	}
+
+	#[tokio::test]
+	async fn test_http_json_protocol_from_config() {
+		let config = OtelConfig {
+			stdout: None,
+			exporter: Some(ExporterConfig {
+				protocol: OtlpProtocol::HttpJson,
+				logs: Some(ProviderConfig { enabled: true, ..Default::default() }),
+				traces: Some(ProviderConfig { enabled: true, ..Default::default() }),
+				..Default::default()
+			}),
+		};
+		let guard = init_otel!(&config).expect("Error initializing Otel");
+		assert!(guard.logger_provider.is_some());
+		assert!(guard.tracer_provider.is_some());
+	}
+
+	#[test]
+	fn test_env_var_overrides_config_protocol() {
+		// SAFETY: no other threads are reading or writing the environment at
+		// this point.
+		unsafe { std::env::set_var("OTEL_EXPORTER_OTLP_PROTOCOL", "http/protobuf") };
+		assert!(matches!(super::otlp_protocol(OtlpProtocol::Grpc), super::Protocol::HttpBinary));
+	}
+
+	#[test]
+	fn test_config_protocol_used_without_env_var() {
+		// SAFETY: no other threads are reading or writing the environment at
+		// this point.
+		unsafe { std::env::remove_var("OTEL_EXPORTER_OTLP_PROTOCOL") };
+		assert!(matches!(super::otlp_protocol(OtlpProtocol::HttpJson), super::Protocol::HttpJson));
 	}
 
 	#[tokio::test]

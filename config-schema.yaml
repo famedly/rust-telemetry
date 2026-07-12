@@ -22,7 +22,7 @@ $defs:
     type: object
     properties:
       endpoint:
-        description: gRPC endpoint for exporting using OTELP
+        description: Endpoint for exporting using OTLP. See the `protocol` option for how the transport protocol is selected. For the HTTP protocols, the signal-specific path (e.g. `/v1/traces`) is appended automatically.
         $ref: '#/$defs/OtelUrl'
       logs:
         description: Logs exporting config
@@ -34,6 +34,13 @@ $defs:
         anyOf:
         - $ref: '#/$defs/ProviderConfig'
         - type: 'null'
+      protocol:
+        description: |-
+          OTLP transport protocol (`grpc`, `http/protobuf` or `http/json`).
+          The `OTEL_EXPORTER_OTLP_PROTOCOL` environment variable takes precedence
+          over this option when set.
+        $ref: '#/$defs/OtlpProtocol'
+        default: grpc
       resource_metadata:
         description: |-
           Key value mapping of the OTEL resource. See [Resource semantic conventions](https://opentelemetry.io/docs/specs/semconv/resource/) for what can be set here.
@@ -61,6 +68,18 @@ $defs:
     description: Wrapper over [`Url`] with [`Default`] implementation `http://localhost:4317`
     type: string
     format: uri
+  OtlpProtocol:
+    description: OTLP transport protocol
+    oneOf:
+    - description: Export using gRPC
+      type: string
+      const: grpc
+    - description: Export using HTTP with protobuf-encoded payloads
+      type: string
+      const: http/protobuf
+    - description: Export using HTTP with JSON-encoded payloads
+      type: string
+      const: http/json
   ProviderConfig:
     description: Provider configuration for OpenTelemetry export
     type: object
