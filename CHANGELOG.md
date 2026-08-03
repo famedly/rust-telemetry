@@ -1,19 +1,39 @@
+<!--
+SPDX-FileCopyrightText: 2025 Famedly GmbH (info@famedly.com)
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
+## [1.4.0] - 2026-08-03
+
+### 🚀 Features
+
+- Add engineering-standards
+
+### 🐛 Bug Fixes
+
+- Update environment variables for publish crate action
+- Use doc_cfg instead of doc_auto_cfg
+
+### 💼 Other
+
+- Update opentelemetry version
+
+### ⚙️ Miscellaneous Tasks
+
+- Update GitHub Action pins
+- Update GitHub Action pins
+- Fix clippy lint
 
 ## [1.3.0] - 2026-04-16
 
 ### Miscellaneous Tasks
 
 - Bump reqwest and famedly_rust_utils
-
-<!--
-SPDX-FileCopyrightText: 2025 Famedly GmbH (info@famedly.com)
-
-SPDX-License-Identifier: Apache-2.0
--->
 
 # Changelog
 
