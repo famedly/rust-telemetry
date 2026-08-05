@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 [package]
-name = "rust-telemetry"
-version = "1.4.0"
 authors = []
+description = "Observability helpers originally developed for internal use at Famedly"
 edition = "2024"
+license = "Apache-2.0"
+name = "rust-telemetry"
 repository = "https://github.com/famedly/rust-telemetry"
 resolver = "2"
-license = "Apache-2.0"
-description = "Observability helpers originally developed for internal use at Famedly"
+version = "1.4.0"
 # publish = ["famedly"]
 
 [[bin]]
@@ -20,10 +20,7 @@ required-features = ["schemars", "serde_yaml"]
 
 [dependencies]
 async-trait = { version = "^0.1.51" }
-famedly_rust_utils = { version = "1.1.0", features = [
-    "level_filter",
-    "schemars",
-] }
+famedly_rust_utils = { version = "1.1.0", features = ["level_filter", "schemars"] }
 http = { version = "1.2.0" }
 once_cell = { version = "1.20.2" }
 opentelemetry = { version = "0.32.0" }
@@ -31,14 +28,14 @@ opentelemetry-appender-tracing = { version = "0.32.0" }
 opentelemetry-otlp = { version = "0.32.0", features = ["grpc-tonic"] }
 opentelemetry-semantic-conventions = { version = "0.32.0" }
 opentelemetry_sdk = { version = "0.32.0", features = ["rt-tokio"] }
+schemars = { version = "1.0.4", optional = true, features = ["url2"] }
+serde = { version = "1.0.210", features = ["derive"] }
+serde_yaml = { version = "0.9.34", optional = true }
 thiserror = "1.0.64"
+tracing = "0.1.40"
 tracing-opentelemetry = { version = "0.33.0" }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter", "json"] }
-tracing = "0.1.40"
-serde = { version = "1.0.210", features = ["derive"] }
 url = { version = "2.5.2", features = ["serde"] }
-schemars = { version = "1.0.4", optional = true, features = ["url2"] }
-serde_yaml = { version = "0.9.34", optional = true }
 
 # tracing-error
 tracing-error = { version = "0.2.1", optional = true }
@@ -50,21 +47,15 @@ reqwest-middleware = { version = "0.5.1", optional = true }
 
 # axum
 axum = { version = "^0.8", optional = true }
-opentelemetry-instrumentation-tower = { version = "0.18.0", features = [
-  "axum",
-], optional = true }
+opentelemetry-instrumentation-tower = { version = "0.18.0", features = ["axum"], optional = true }
 opentelemetry-resource-detectors = "0.11.0"
 
 [dev-dependencies]
 tokio = { version = "1.43.0", features = ["full"] }
 
 [features]
-reqwest-middleware = [
-    "dep:reqwest",
-    "dep:reqwest-middleware",
-    "dep:opentelemetry-http",
-]
 axum = ["dep:axum", "dep:opentelemetry-instrumentation-tower"]
+reqwest-middleware = ["dep:reqwest", "dep:reqwest-middleware", "dep:opentelemetry-http"]
 schemars = ["dep:schemars", "famedly_rust_utils/schemars"]
 tracing-error = ["dep:tracing-error"]
 
@@ -79,7 +70,6 @@ unused_import_braces = "warn"
 unused_qualifications = "warn"
 
 [lints.clippy]
-tabs_in_doc_comments = "allow"
 branches_sharing_code = "warn"
 cast_lossless = "warn"
 cast_possible_wrap = "warn"
@@ -143,6 +133,7 @@ str_to_string = "warn"
 string_to_string = "warn"
 suboptimal_flops = "warn"
 suspicious_operation_groupings = "warn"
+tabs_in_doc_comments = "allow"
 too_many_lines = "warn"
 trait_duplication_in_bounds = "warn"
 trivially_copy_pass_by_ref = "warn"

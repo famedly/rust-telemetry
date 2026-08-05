@@ -7,19 +7,19 @@
 # See https://spdx.org/licenses/ for list of possible licenses
 # [possible values: any SPDX 3.11 short identifier (+ optional exception)].
 allow = [
-    "MIT",
-    "MIT-0",
-    "Apache-2.0",
-    "ISC",
-    "0BSD",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "BSD-3-Clause-Clear",
-    "BSD-4-Clause",
-    "CC0-1.0",
-    "MS-PL",
-    "Zlib",
-    "Unicode-3.0",
+  "MIT",
+  "MIT-0",
+  "Apache-2.0",
+  "ISC",
+  "0BSD",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "BSD-3-Clause-Clear",
+  "BSD-4-Clause",
+  "CC0-1.0",
+  "MS-PL",
+  "Zlib",
+  "Unicode-3.0",
 ]
 # Do not warn if we allow a license not used by any crate in the dependency graph
 unused-allowed-license = "allow"
@@ -30,26 +30,90 @@ unused-allowed-license = "allow"
 confidence-threshold = 0.95
 
 exceptions = [
-    { crate = "famedly_rust_utils", allow = ["AGPL-3.0"] },
-    { crate = "icu_collections", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "icu_locid", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "icu_locid_transform", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "icu_locid_transform_data", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "icu_normalizer", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "icu_normalizer_data", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "icu_properties", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "icu_properties_data", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "icu_provider", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "icu_provider_macros", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "litemap", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "tinystr", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "unicode-ident", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "webpki-root-certs", allow = ["CDLA-Permissive-2.0"] },
-    { crate = "writable", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "yoke", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "yoke-derive", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "zerofrom", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "zerofrom-derive", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "zerovec", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
-    { crate = "zerovec-derive", allow = ["Unicode-DFS-2016", "Unicode-3.0"] },
+  { crate = "famedly_rust_utils", allow = [
+    "AGPL-3.0",
+  ] },
+  { crate = "icu_collections", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "icu_locid", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "icu_locid_transform", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "icu_locid_transform_data", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "icu_normalizer", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "icu_normalizer_data", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "icu_properties", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "icu_properties_data", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "icu_provider", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "icu_provider_macros", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "litemap", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "tinystr", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "unicode-ident", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "webpki-root-certs", allow = [
+    "CDLA-Permissive-2.0",
+  ] },
+  { crate = "writable", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "yoke", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "yoke-derive", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "zerofrom", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "zerofrom-derive", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "zerovec", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
+  { crate = "zerovec-derive", allow = [
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+  ] },
 ]

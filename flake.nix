@@ -12,16 +12,12 @@
   outputs =
     { flake-parts, ... }@inputs:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      imports = [
-        inputs.famedly-engineering-standards.flakeModules.default
-      ];
+      imports = [ inputs.famedly-engineering-standards.flakeModules.default ];
 
       systems = inputs.famedly-engineering-standards.lib.famedlySystems;
 
-      perSystem =
-        { inputs', ... }:
-        {
-          devShells.default = inputs'.famedly-engineering-standards.devShells.rust;
-        };
+      perSystem = { inputs', ... }: {
+        devShells.default = inputs'.famedly-engineering-standards.devShells.rust;
+      };
     };
 }

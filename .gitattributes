@@ -1,4 +1,15 @@
+## SPDX-FileCopyrightText: 2026 Famedly GmbH
+##
+## SPDX-License-Identifier: Apache-2.0
+
+# managed-by: engineering-standards — do not edit manually.
+#
+# Regenerate with `nix run .#filegen-activate`.
+
 .pre-commit-config.yaml linguist-generated
 .github/workflows/check-pre-commit-hooks.yml linguist-generated
 .gitattributes linguist-generated
-.config/filegen-manifest.json linguist-generated
+.editorconfig linguist-generated
+treefmt.toml linguist-generated
+.taplo.toml linguist-generated
+.github/workflows/check-pre-commit-hooks.yml.license linguist-generated
