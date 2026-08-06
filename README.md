@@ -27,7 +27,7 @@ If no configuration is present, the exporting of logs, traces and metrics is dis
 
 The functions on the crate exporting OpenTelemetry traces should be annotated with `tracing::instrument` to generate a new span for that function. Documentation on this macro can be found [here](https://docs.rs/tracing/latest/tracing/attr.instrument.html).
 
-The OpenTelemetry information is exported using gRPC to an OpenTelemetry collector. By default, the expected endpoint is `http://localhots:4317`
+The OpenTelemetry information is exported using gRPC to an OpenTelemetry collector. By default, the expected endpoint is `http://localhost:4317`
 
 The default level of logging and traces is `info` for the crate and all its dependencies. This level can be changed through the configuration, and the resulting filter expression is `general_level,main_crate=level` where `general_level` and `level` come from the configuration and `main_crate` is an argument for the `init_otel` function
 
