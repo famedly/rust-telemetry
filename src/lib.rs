@@ -177,7 +177,8 @@ pub fn init_otel(
 				let filter_otel = logger_config.get_filter(main_crate)?;
 				let logger_provider = init_logs(exporter.endpoint.clone(), resource.clone())?;
 
-				// Create a new OpenTelemetryTracingBridge using the above LoggerProvider.
+				// Create a new OpenTelemetryTracingBridge using the above
+				// LoggerProvider.
 				let logs_layer =
 					OpenTelemetryTracingBridge::new(&logger_provider).with_filter(filter_otel);
 
