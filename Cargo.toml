@@ -10,7 +10,7 @@ license = "Apache-2.0"
 name = "rust-telemetry"
 repository = "https://github.com/famedly/rust-telemetry"
 resolver = "2"
-version = "1.4.0"
+version = "1.4.1"
 # publish = ["famedly"]
 
 [[bin]]

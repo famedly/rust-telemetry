@@ -1,3 +1,23 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+
+## [1.4.1] - 2026-10-27
+
+### Documentation
+
+- Fix typo in README
+
+### Miscellaneous Tasks
+
+- Bump engineering-standards
+- Update webpki root certs for VUL-29
+
+### Refactor
+
+- Use typed interfaces for generating EnvFilters from config
+
 <!--
 SPDX-FileCopyrightText: 2025 Famedly GmbH (info@famedly.com)
 
